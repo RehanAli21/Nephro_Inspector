@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Button, StyleSheet, Text, View } from 'react-native'
-import * as FileSystem from 'expo-file-system'
+import { Button, Image, SafeAreaView, StyleSheet } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
-
-const imgDir = FileSystem.documentDirectory + 'images/'
-
-const CheckDirExists = async () => {
-	const dirInfo = await FileSystem.getInfoAsync(imgDir)
-
-	if (!dirInfo.exists) {
-		await FileSystem.makeDirectoryAsync(imgDir, { intermediates: true })
-	}
-}
+import * as ImageManipulator from 'expo-image-manipulator'
 
 export default function App() {
 	const [image, setImage] = useState(null)
@@ -27,7 +17,13 @@ export default function App() {
 			})
 
 			if (!result.canceled) {
-				console.log(result.assets[0].uri)
+				// Resize the selected image to 250x250
+				const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
+					format: 'jpeg',
+					compress: 1,
+				})
+
+				setImage(resizedImage)
 			}
 		} else {
 			alert('Cannot Access Images')
@@ -35,12 +31,18 @@ export default function App() {
 	}
 
 	return (
-		<View style={styles.container}>
+		<SafeAreaView style={styles.container}>
 			<Button
 				title='Select Image'
 				onPress={selectImage}
 			/>
-		</View>
+			{image && (
+				<Image
+					source={{ uri: image.uri }}
+					style={{ width: 250, height: 250, marginTop: 10 }}
+				/>
+			)}
+		</SafeAreaView>
 	)
 }
 
