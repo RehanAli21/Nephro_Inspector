@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button, Image, SafeAreaView, StyleSheet } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as FileSystem from 'expo-file-system'
 
 export default function App() {
 	const [image, setImage] = useState(null)
@@ -30,6 +31,20 @@ export default function App() {
 		}
 	}
 
+	const uploadimage = async () => {
+		console.log(image.uri)
+
+		try {
+			await FileSystem.uploadAsync('http://localhost:8000/checkImage', image.uri, {
+				httpMethod: 'POST',
+				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+				fieldName: 'file',
+			})
+		} catch (err) {
+			console.log(err)
+		}
+	}
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<Button
@@ -37,10 +52,18 @@ export default function App() {
 				onPress={selectImage}
 			/>
 			{image && (
-				<Image
-					source={{ uri: image.uri }}
-					style={{ width: 250, height: 250, marginTop: 10 }}
-				/>
+				<>
+					<Image
+						source={{ uri: image.uri }}
+						style={{ width: 250, height: 250, marginTop: 10, marginBottom: 10 }}
+					/>
+
+					<Button
+						title='Upload Image'
+						onPress={uploadimage}
+						style={{ marginTop: 10 }}
+					/>
+				</>
 			)}
 		</SafeAreaView>
 	)
