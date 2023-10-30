@@ -8,6 +8,12 @@ binaryModelPath = os.getcwd() + '/app/models/BinaryModel.h5'
 
 binaryModel = tf.keras.models.load_model(binaryModelPath)
 
+multiModelPath = os.getcwd() + '/app/models/MultiClassModel.h5'
+
+multiModel = tf.keras.models.load_model(multiModelPath)
+
+multiClasses = ['Cyst', 'Stone', 'Tumor']
+
 # Load and preprocess an image
 def load_and_preprocess_image(img):
     # Convert the PIL image to a numpy array
@@ -29,7 +35,11 @@ def prediction(inputImg):
     predictions = binaryModel.predict(preprocessed_image)
 
     if predictions[0] > 0.5:
-        return "Not Normal"
+        multiPredict = multiModel.predict(preprocessed_image)
+
+        result = multiClasses[np.argmax(multiPredict)]
+
+        return result
     else:
         return "Normal"
 
