@@ -32,15 +32,17 @@ export default function App() {
 	}
 
 	const uploadimage = async () => {
-		console.log(image.uri)
-
 		try {
-			await FileSystem.uploadAsync('http://localhost:8000/checkImage', image.uri, {
+			const res = await FileSystem.uploadAsync('http://192.168.10.4:8000/checkImage', image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-				fieldName: 'file',
+				fieldName: 'image',
 			})
+
+			console.log('res')
+			console.log(res)
 		} catch (err) {
+			console.log('err')
 			console.log(err)
 		}
 	}
