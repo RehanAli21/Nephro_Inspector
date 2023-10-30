@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image
+from . import model
 
 app = FastAPI()
 
@@ -20,13 +20,9 @@ def read_root():
 @app.post("/checkImage")
 async def predictionRoute(image: UploadFile = File(...)):
     try:
-        # Log or debug here
-        # print(image.filename, image.content_type)
-        image = Image.open(image.file).convert("L")
+        result = model.prediction(image)
 
-        print(image)
-        # Your image processing logic here
-        return {"message": "Image received successfully"}
+        return {"message": result}
     except Exception as e:
         print(str(e))
         return {"error": "An error occurred while processing the image"}

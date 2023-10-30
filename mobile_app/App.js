@@ -40,7 +40,10 @@ export default function App() {
 			})
 
 			console.log('res')
-			console.log(res)
+
+			const message = JSON.parse(res.body).message
+
+			alert(`Your Results are: ${message}`)
 		} catch (err) {
 			console.log('err')
 			console.log(err)
