@@ -14,7 +14,6 @@ export default function App() {
 			const result = await ImagePicker.launchImageLibraryAsync({
 				mediaTypes: ImagePicker.MediaTypeOptions.Images,
 				allowsEditing: true,
-				aspect: [1, 1],
 			})
 
 			if (!result.canceled) {
@@ -28,6 +27,29 @@ export default function App() {
 			}
 		} else {
 			alert('Cannot Access Images')
+		}
+	}
+
+	const useCamera = async () => {
+		const request = await ImagePicker.requestCameraPermissionsAsync()
+
+		if (request.granted) {
+			const result = await ImagePicker.launchCameraAsync({
+				mediaTypes: ImagePicker.MediaTypeOptions.Images,
+				allowsEditing: true,
+			})
+
+			if (!result.canceled) {
+				// Resize the selected image to 250x250
+				const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
+					format: 'jpeg',
+					compress: 1,
+				})
+
+				setImage(resizedImage)
+			}
+		} else {
+			alert('Cannot Access Camera')
 		}
 	}
 
@@ -56,6 +78,10 @@ export default function App() {
 				title='Select Image'
 				onPress={selectImage}
 			/>
+			<Button
+				title='Camera'
+				onPress={useCamera}
+			/>
 			{image && (
 				<>
 					<Image
@@ -80,5 +106,6 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'center',
+		rowGap: 10,
 	},
 })
