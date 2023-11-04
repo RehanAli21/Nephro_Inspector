@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Button, Image, SafeAreaView, StyleSheet } from 'react-native'
+import { Button, Image, SafeAreaView, StyleSheet, useColorScheme } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
 
-export default function App() {
+export default function Page() {
+	let colorScheme = useColorScheme()
+
 	const [image, setImage] = useState(null)
 
 	const selectImage = async () => {
@@ -73,7 +75,7 @@ export default function App() {
 	}
 
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={colorScheme === 'dark' ? darkStyles.container : lightStyles.container}>
 			<Button
 				title='Select Image'
 				onPress={selectImage}
@@ -100,10 +102,20 @@ export default function App() {
 	)
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#fff',
+		backgroundColor: '#fafafa',
+		alignItems: 'center',
+		justifyContent: 'center',
+		rowGap: 10,
+	},
+})
+
+const darkStyles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: '#2c2c2c',
 		alignItems: 'center',
 		justifyContent: 'center',
 		rowGap: 10,
