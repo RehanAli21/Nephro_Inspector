@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AntDesign } from '@expo/vector-icons'
-import { Button, Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions } from 'react-native'
+import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
 import { Link } from 'expo-router'
+const bCameraIcon = require('../../assets/icons/bcameraicon.png')
+const bImageIcon = require('../../assets/icons/bimageicon.png')
+const wCameraIcon = require('../../assets/icons/wcameraicon.png')
+const wImageIcon = require('../../assets/icons/wimageicon.png')
 
 const { width, height } = Dimensions.get('window')
 export default function Page() {
@@ -78,7 +82,7 @@ export default function Page() {
 	}
 
 	return (
-		<SafeAreaView style={[styles.container]}>
+		<SafeAreaView style={[styles.container, colorScheme === 'dark' ? darkStyles.container : lightStyles.container]}>
 			<View style={[styles.v1]}>
 				<Link
 					href={'/'}
@@ -87,7 +91,7 @@ export default function Page() {
 						<AntDesign
 							name='leftcircleo'
 							size={width * 0.07}
-							color='black'
+							color={colorScheme === 'dark' ? '#fafafa' : '$242424'}
 						/>
 					</Pressable>
 				</Link>
@@ -95,74 +99,51 @@ export default function Page() {
 			<View style={[styles.v2]}>
 				<Pressable
 					onPress={useCamera}
-					style={[styles.headbtn, { paddingStart: 12, paddingEnd: 15 }]}>
+					style={[styles.headbtn, colorScheme === 'dark' ? darkStyles.headbtn : lightStyles.headbtn, { paddingStart: 12, paddingEnd: 15 }]}>
 					<Image
 						resizeMode='contain'
 						style={{ width: width * 0.09, height: width * 0.05, marginEnd: 10 }}
-						source={require('../../assets/icons/bcameraicon.png')}
+						source={colorScheme === 'dark' ? wCameraIcon : bCameraIcon}
 					/>
-					<Text style={[styles.btnText]}>Use Camera</Text>
+					<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.btnText : lightStyles.btnText]}>Use Camera</Text>
 				</Pressable>
 				<Pressable
 					onPress={selectImage}
-					style={[styles.headbtn, { paddingStart: 18, paddingEnd: 15 }]}>
+					style={[styles.headbtn, colorScheme === 'dark' ? darkStyles.headbtn : lightStyles.headbtn, { paddingStart: 18, paddingEnd: 15 }]}>
 					<Image
 						resizeMode='contain'
 						style={{ width: width * 0.05, height: width * 0.05, marginEnd: 15 }}
-						source={require('../../assets/icons/bimageicon.png')}
+						source={colorScheme === 'dark' ? wImageIcon : bImageIcon}
 					/>
-					<Text style={[styles.btnText]}>Select Image</Text>
+					<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.btnText : lightStyles.btnText]}>Select Image</Text>
 				</Pressable>
 			</View>
 			<View style={[styles.v3]}>
 				{image ? (
 					<>
 						<Image
-							style={[styles.imgPlaceholder]}
+							style={[styles.imgPlaceholder, colorScheme === 'dark' ? darkStyles.imgPlaceholder : lightStyles.imgPlaceholder]}
 							resizeMode='contain'
 							source={{ uri: image.uri }}
 						/>
 						<Pressable
 							onPress={uploadimage}
-							style={[styles.scanBtn]}>
-							<Text style={[styles.scanText]}>Scan</Text>
+							onPressIn={() => setScanBtn(true)}
+							onPressOut={() => setScanBtn(false)}
+							style={[styles.scanBtn, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
+							<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Scan</Text>
 						</Pressable>
 					</>
 				) : (
-					<View style={[styles.imgPlaceholder]}>
-						<Text style={[styles.textPlaceholder]}>Image For Scanning</Text>
+					<View style={[styles.imgPlaceholder, colorScheme === 'dark' ? darkStyles.imgPlaceholder : lightStyles.imgPlaceholder]}>
+						<Text style={[styles.textPlaceholder, colorScheme === 'dark' ? darkStyles.textPlaceholder : lightStyles.textPlaceholder]}>
+							Image For Scanning
+						</Text>
 					</View>
 				)}
 			</View>
 		</SafeAreaView>
 	)
-
-	// return (
-	// 	<SafeAreaView style={colorScheme === 'dark' ? darkStyles.container : lightStyles.container}>
-	// 		<Button
-	// 			title='Select Image'
-	// 			onPress={selectImage}
-	// 		/>
-	// 		<Button
-	// 			title='Camera'
-	// 			onPress={useCamera}
-	// 		/>
-	// 		{image && (
-	// 			<>
-	// 				<Image
-	// 					source={{ uri: image.uri }}
-	// 					style={{ width: 250, height: 250, marginTop: 10, marginBottom: 10 }}
-	// 				/>
-
-	// 				<Button
-	// 					title='Upload Image'
-	// 					onPress={uploadimage}
-	// 					style={{ marginTop: 10 }}
-	// 				/>
-	// 			</>
-	// 		)}
-	// 	</SafeAreaView>
-	// )
 }
 
 const styles = StyleSheet.create({
@@ -190,6 +171,7 @@ const styles = StyleSheet.create({
 		flex: 5,
 		width: '100%',
 		alignItems: 'center',
+		paddingTop: height * 0.05,
 	},
 	headbtn: {
 		display: 'flex',
@@ -238,20 +220,48 @@ const styles = StyleSheet.create({
 
 const lightStyles = StyleSheet.create({
 	container: {
-		flex: 1,
 		backgroundColor: '#fafafa',
-		alignItems: 'center',
-		justifyContent: 'center',
-		rowGap: 10,
+	},
+	headbtn: {
+		borderColor: '#242424',
+	},
+	btnText: {
+		color: '#242424',
+	},
+	imgPlaceholder: {
+		borderColor: '#242424',
+	},
+	textPlaceholder: {
+		color: '#242424',
+	},
+	scanBtn: {
+		borderColor: '#242424',
+	},
+	scanText: {
+		color: '#242424',
 	},
 })
 
 const darkStyles = StyleSheet.create({
 	container: {
-		flex: 1,
-		backgroundColor: '#2c2c2c',
-		alignItems: 'center',
-		justifyContent: 'center',
-		rowGap: 10,
+		backgroundColor: '#242424',
+	},
+	headbtn: {
+		borderColor: '#fafafa',
+	},
+	btnText: {
+		color: '#fafafa',
+	},
+	imgPlaceholder: {
+		borderColor: '#fafafa',
+	},
+	textPlaceholder: {
+		color: '#fafafa',
+	},
+	scanBtn: {
+		borderColor: '#fafafa',
+	},
+	scanText: {
+		color: '#fafafa',
 	},
 })
