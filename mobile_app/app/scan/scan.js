@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AntDesign } from '@expo/vector-icons'
-import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator } from 'react-native'
+import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator, TextInput } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
@@ -16,6 +16,7 @@ export default function Page() {
 
 	const [image, setImage] = useState(null)
 	const [loading, setLoading] = useState(false)
+	const [result, setResult] = useState('')
 
 	const selectImage = async () => {
 		const request = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -73,17 +74,13 @@ export default function Page() {
 				fieldName: 'image',
 			})
 
-			console.log('res')
-
 			const message = JSON.parse(res.body).message
 
-			alert(`Your Results are: ${message}`)
-
-			setLoading(false)
+			if (loading === true) setResult(message)
 		} catch (err) {
-			console.log('err')
 			console.log(err)
 			setLoading(false)
+			alert('Something Went wrong!! Try Again')
 		}
 	}
 
@@ -148,20 +145,63 @@ export default function Page() {
 			</View>
 			{loading && (
 				<View style={[styles.loading]}>
-					<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec]}>
-						<View style={[styles.loadSec1]}>
-							<ActivityIndicator
-								size='large'
-								color={colorScheme === 'dark' ? '#fafafa' : '#242424'}
-							/>
-							<Text style={[styles.loadText, colorScheme === 'dark' ? darkStyles.loadText : lightStyles.loadText]}>
-								Scanning, Wait.
-							</Text>
+					{result === '' ? (
+						<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec]}>
+							<View style={[styles.loadSec1]}>
+								<ActivityIndicator
+									size='large'
+									color={colorScheme === 'dark' ? '#fafafa' : '#242424'}
+								/>
+								<Text style={[styles.loadText, colorScheme === 'dark' ? darkStyles.loadText : lightStyles.loadText]}>
+									Scanning, Wait.
+								</Text>
+							</View>
+							<Pressable
+								onPress={() => setLoading(false)}
+								style={[styles.scanBtn, { marginBottom: -30 }, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
+								<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Cancel</Text>
+							</Pressable>
 						</View>
-						<Pressable style={[styles.scanBtn, { marginBottom: -30 }, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
-							<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Cancel</Text>
-						</Pressable>
-					</View>
+					) : (
+						<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec]}>
+							<View style={[styles.loadSec1, { marginTop: height * 0.06 }]}>
+								<Text style={[styles.loadText, colorScheme === 'dark' ? darkStyles.loadText : lightStyles.loadText]}>
+									Kidney {result === 'Normal' ? 'is Normal' : `has ${result}`}
+								</Text>
+							</View>
+							<TextInput
+								style={[styles.loadInput, colorScheme === 'dark' ? darkStyles.loadInput : lightStyles.loadInput]}
+								placeholder='Save by Name'
+								placeholderTextColor={colorScheme === 'dark' ? '#aaaaaa' : '#242424'}
+							/>
+							<View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly' }}>
+								<Pressable
+									onPress={() => {
+										setLoading(false)
+										setResult('')
+									}}
+									style={[
+										styles.loadBtn,
+										{ marginBottom: -30 },
+										colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn,
+									]}>
+									<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Save</Text>
+								</Pressable>
+								<Pressable
+									onPress={() => {
+										setLoading(false)
+										setResult('')
+									}}
+									style={[
+										styles.loadBtn,
+										{ marginBottom: -30 },
+										colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn,
+									]}>
+									<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Discard</Text>
+								</Pressable>
+							</View>
+						</View>
+					)}
 				</View>
 			)}
 		</SafeAreaView>
@@ -252,7 +292,7 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		borderWidth: 2,
 		alignItems: 'center',
-		justifyContent: 'center',
+		justifyContent: 'flex-start',
 	},
 	loadSec1: {
 		display: 'flex',
@@ -260,9 +300,30 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		gap: 20,
+		marginTop: height * 0.1,
 	},
 	loadText: {
 		fontSize: height * 0.035,
+	},
+	loadBtn: {
+		borderWidth: 2,
+		padding: 5,
+		paddingStart: 20,
+		paddingEnd: 20,
+		borderRadius: 40,
+		marginTop: 40,
+		marginStart: 15,
+	},
+	loadInput: {
+		borderBottomWidth: 2,
+		borderRadius: 10,
+		fontSize: height * 0.02,
+		width: width * 0.5,
+		marginTop: 20,
+		marginBottom: -10,
+		padding: 5,
+		paddingStart: 10,
+		paddingEnd: 10,
 	},
 })
 
@@ -325,5 +386,9 @@ const darkStyles = StyleSheet.create({
 	},
 	loadText: {
 		color: '#fafafa',
+	},
+	loadInput: {
+		color: '#fafafa',
+		borderColor: '#fafafa',
 	},
 })
