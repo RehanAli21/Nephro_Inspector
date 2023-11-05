@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Button, Image, SafeAreaView, StyleSheet, useColorScheme } from 'react-native'
+import { Button, Image, Text, SafeAreaView, StyleSheet, useColorScheme } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
 
-export default function Scan() {
+export default function Page() {
 	let colorScheme = useColorScheme()
 
 	const [image, setImage] = useState(null)

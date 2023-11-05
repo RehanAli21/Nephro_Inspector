@@ -1,4 +1,5 @@
 import { Pressable, Text, Image, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
+import { useRouter, Link } from 'expo-router'
 const wscanicon = require('../assets/icons/wscanicon.png')
 const bscanicon = require('../assets/icons/bscanicon.png')
 const wrecordicon = require('../assets/icons/wrecordicon.png')
@@ -6,7 +7,8 @@ const brecordicon = require('../assets/icons/brecordicon.png')
 
 const { width, height } = Dimensions.get('window')
 export default function Main() {
-	let colorScheme = useColorScheme()
+	const colorScheme = useColorScheme()
+	const router = useRouter()
 
 	return (
 		<SafeAreaView style={colorScheme === 'dark' ? darkStyles.container : lightStyles.container}>
@@ -20,16 +22,20 @@ export default function Main() {
 			</View>
 			<View style={colorScheme === 'dark' ? darkStyles.secondary : lightStyles.secondary}>
 				<View style={colorScheme === 'dark' ? darkStyles.secondView : lightStyles.secondView}>
-					<Pressable
-						onPress={() => console.log('scan')}
-						style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
-						<Image
-							style={{ width: width * 0.27, height: width * 0.27 }}
-							resizeMode='contain'
-							source={colorScheme === 'dark' ? wscanicon : bscanicon}
-						/>
-						<Text style={colorScheme === 'dark' ? darkStyles.secondText : lightStyles.secondText}>Scan</Text>
-					</Pressable>
+					<Link
+						href={'/scan/scan'}
+						asChild>
+						<Pressable
+							// onPress={() => router.push('./scan')}
+							style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
+							<Image
+								style={{ width: width * 0.27, height: width * 0.27 }}
+								resizeMode='contain'
+								source={colorScheme === 'dark' ? wscanicon : bscanicon}
+							/>
+							<Text style={colorScheme === 'dark' ? darkStyles.secondText : lightStyles.secondText}>Scan</Text>
+						</Pressable>
+					</Link>
 				</View>
 				<View style={colorScheme === 'dark' ? darkStyles.secondView : lightStyles.secondView}>
 					<Pressable
@@ -57,7 +63,7 @@ const lightStyles = StyleSheet.create({
 		rowGap: 10,
 	},
 	text: {
-		color: '#2c2c2c',
+		color: '#242424',
 		fontWeight: '900',
 		textAlign: 'center',
 		fontSize: 25,
@@ -83,7 +89,7 @@ const lightStyles = StyleSheet.create({
 		flexDirection: 'row',
 		gap: 2,
 		justifyContent: 'space-evenly',
-		backgroundColor: '#2c2c2c',
+		backgroundColor: '#242424',
 	},
 	secondView: {
 		backgroundColor: '#fafafa',
@@ -93,7 +99,7 @@ const lightStyles = StyleSheet.create({
 		justifyContent: 'center',
 	},
 	secondText: {
-		color: '#2c2c2c',
+		color: '#242424',
 		fontWeight: '800',
 		fontSize: 15,
 		textAlign: 'center',
@@ -105,7 +111,7 @@ const darkStyles = StyleSheet.create({
 	container: {
 		display: 'flex',
 		flex: 1,
-		backgroundColor: '#2c2c2c',
+		backgroundColor: '#242424',
 		alignItems: 'center',
 		justifyContent: 'center',
 		rowGap: 10,
@@ -141,7 +147,7 @@ const darkStyles = StyleSheet.create({
 		backgroundColor: '#fafafa',
 	},
 	secondView: {
-		backgroundColor: '#2c2c2c',
+		backgroundColor: '#242424',
 		width: '50%',
 		display: 'flex',
 		alignContent: 'center',
