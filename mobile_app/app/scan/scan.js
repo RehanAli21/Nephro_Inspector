@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AntDesign } from '@expo/vector-icons'
-import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions } from 'react-native'
+import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
@@ -15,6 +15,7 @@ export default function Page() {
 	let colorScheme = useColorScheme()
 
 	const [image, setImage] = useState(null)
+	const [loading, setLoading] = useState(false)
 
 	const selectImage = async () => {
 		const request = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -63,6 +64,8 @@ export default function Page() {
 	}
 
 	const uploadimage = async () => {
+		console.log('scan')
+		setLoading(true)
 		try {
 			const res = await FileSystem.uploadAsync('http://192.168.10.4:8000/checkImage', image.uri, {
 				httpMethod: 'POST',
@@ -75,9 +78,12 @@ export default function Page() {
 			const message = JSON.parse(res.body).message
 
 			alert(`Your Results are: ${message}`)
+
+			setLoading(false)
 		} catch (err) {
 			console.log('err')
 			console.log(err)
+			setLoading(false)
 		}
 	}
 
@@ -91,7 +97,7 @@ export default function Page() {
 						<AntDesign
 							name='leftcircleo'
 							size={width * 0.07}
-							color={colorScheme === 'dark' ? '#fafafa' : '$242424'}
+							color={colorScheme === 'dark' ? '#fafafa' : '#242424'}
 						/>
 					</Pressable>
 				</Link>
@@ -128,8 +134,6 @@ export default function Page() {
 						/>
 						<Pressable
 							onPress={uploadimage}
-							onPressIn={() => setScanBtn(true)}
-							onPressOut={() => setScanBtn(false)}
 							style={[styles.scanBtn, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
 							<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Scan</Text>
 						</Pressable>
@@ -142,6 +146,24 @@ export default function Page() {
 					</View>
 				)}
 			</View>
+			{loading && (
+				<View style={[styles.loading]}>
+					<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec]}>
+						<View style={[styles.loadSec1]}>
+							<ActivityIndicator
+								size='large'
+								color={colorScheme === 'dark' ? '#fafafa' : '#242424'}
+							/>
+							<Text style={[styles.loadText, colorScheme === 'dark' ? darkStyles.loadText : lightStyles.loadText]}>
+								Scanning, Wait.
+							</Text>
+						</View>
+						<Pressable style={[styles.scanBtn, { marginBottom: -30 }, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
+							<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Cancel</Text>
+						</Pressable>
+					</View>
+				</View>
+			)}
 		</SafeAreaView>
 	)
 }
@@ -216,6 +238,32 @@ const styles = StyleSheet.create({
 		fontSize: height * 0.03,
 		fontWeight: 400,
 	},
+	loading: {
+		position: 'absolute',
+		width: width,
+		height: height,
+		backgroundColor: 'rgba(0,0,0,0.8)',
+	},
+	loadingSec: {
+		width: width * 0.8,
+		height: height * 0.35,
+		top: height * 0.3,
+		left: width * 0.1,
+		borderRadius: 20,
+		borderWidth: 2,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	loadSec1: {
+		display: 'flex',
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		gap: 20,
+	},
+	loadText: {
+		fontSize: height * 0.035,
+	},
 })
 
 const lightStyles = StyleSheet.create({
@@ -240,6 +288,13 @@ const lightStyles = StyleSheet.create({
 	scanText: {
 		color: '#242424',
 	},
+	loadingSec: {
+		backgroundColor: '#fafafa',
+		borderColor: '#242424',
+	},
+	loadText: {
+		color: '#242424',
+	},
 })
 
 const darkStyles = StyleSheet.create({
@@ -262,6 +317,13 @@ const darkStyles = StyleSheet.create({
 		borderColor: '#fafafa',
 	},
 	scanText: {
+		color: '#fafafa',
+	},
+	loadingSec: {
+		backgroundColor: '#242424',
+		borderColor: '#fafafa',
+	},
+	loadText: {
 		color: '#fafafa',
 	},
 })
