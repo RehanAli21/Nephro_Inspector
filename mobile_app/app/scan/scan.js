@@ -11,6 +11,7 @@ const wCameraIcon = require('../../assets/icons/wcameraicon.png')
 const wImageIcon = require('../../assets/icons/wimageicon.png')
 
 const { width, height } = Dimensions.get('window')
+let checkLoading = false
 export default function Page() {
 	let colorScheme = useColorScheme()
 
@@ -66,9 +67,11 @@ export default function Page() {
 
 	const uploadimage = async () => {
 		console.log('scan')
-		setLoading(true)
+		await setLoading(true)
+		checkLoading = true
 		try {
-			const res = await FileSystem.uploadAsync('http://192.168.10.4:8000/checkImage', image.uri, {
+			// first get ipv4 address from cmd using 'ipconfig' and paste that here to work.
+			const res = await FileSystem.uploadAsync('http://192.168.10.6:8000/checkImage', image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
 				fieldName: 'image',
@@ -76,11 +79,13 @@ export default function Page() {
 
 			const message = JSON.parse(res.body).message
 
-			if (loading === true) setResult(message)
+			if (checkLoading) setResult(message)
 		} catch (err) {
 			console.log(err)
+
+			if (checkLoading) alert('Something Went wrong!! Try Again')
+
 			setLoading(false)
-			alert('Something Went wrong!! Try Again')
 		}
 	}
 
@@ -157,7 +162,11 @@ export default function Page() {
 								</Text>
 							</View>
 							<Pressable
-								onPress={() => setLoading(false)}
+								onPress={() => {
+									console.log('cancel pressed')
+									setLoading(false)
+									checkLoading = false
+								}}
 								style={[styles.scanBtn, { marginBottom: -30 }, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
 								<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Cancel</Text>
 							</Pressable>
@@ -178,6 +187,7 @@ export default function Page() {
 								<Pressable
 									onPress={() => {
 										setLoading(false)
+										checkLoading = false
 										setResult('')
 									}}
 									style={[
@@ -190,6 +200,7 @@ export default function Page() {
 								<Pressable
 									onPress={() => {
 										setLoading(false)
+										checkLoading = false
 										setResult('')
 									}}
 									style={[
