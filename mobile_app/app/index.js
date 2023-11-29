@@ -1,5 +1,5 @@
 import { Pressable, Text, Image, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
-import { useRouter, Link } from 'expo-router'
+import { Link } from 'expo-router'
 const wscanicon = require('../assets/icons/wscanicon.png')
 const bscanicon = require('../assets/icons/bscanicon.png')
 const wrecordicon = require('../assets/icons/wrecordicon.png')
@@ -8,7 +8,6 @@ const brecordicon = require('../assets/icons/brecordicon.png')
 const { width, height } = Dimensions.get('window')
 export default function Main() {
 	const colorScheme = useColorScheme()
-	const router = useRouter()
 
 	return (
 		<SafeAreaView style={colorScheme === 'dark' ? darkStyles.container : lightStyles.container}>
@@ -25,9 +24,7 @@ export default function Main() {
 					<Link
 						href={'/scan/scan'}
 						asChild>
-						<Pressable
-							// onPress={() => router.push('./scan')}
-							style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
+						<Pressable style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
 							<Image
 								style={{ width: width * 0.27, height: width * 0.27 }}
 								resizeMode='contain'
@@ -39,7 +36,7 @@ export default function Main() {
 				</View>
 				<View style={colorScheme === 'dark' ? darkStyles.secondView : lightStyles.secondView}>
 					<Pressable
-						onPress={() => console.log('record')}
+						onPress={() => alert('record is not implemented yet!')}
 						style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
 						<Image
 							style={{ width: width * 0.25, height: width * 0.262 }}
