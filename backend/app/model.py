@@ -9,13 +9,9 @@ binaryModelPath = os.getcwd() + '/app/models/BinaryModel.h5'
 
 binaryModel = tf.keras.models.load_model(binaryModelPath)
 
-effiModelPath = os.getcwd() + '/app/models/effimodel.h5'
+multiclassModelPath = os.getcwd() + '/app/models/multiclassModel.h5'
 
-effiModel = tf.keras.models.load_model(effiModelPath)
-
-resModelPath = os.getcwd() + '/app/models/resmodel.h5'
-
-resModel = tf.keras.models.load_model(resModelPath)
+multiclassModel = tf.keras.models.load_model(multiclassModelPath)
 
 multiClasses = ['Cyst', 'Stone', 'Tumor']
 
@@ -33,54 +29,23 @@ def load_and_preprocess_image(img):
     return img_array
 
 def experimentMulti(preprocessed_image):
-    resResult = resModel.predict(preprocessed_image)
-    print("---resnet---\n",resResult)
-    resPredict = resResult[0]
+    multiclassResult = multiclassModel.predict(preprocessed_image)
+    print("---multiClassnet---\n")
+    multiclassPredict = multiclassResult[0]
 
-    print(resPredict)
+    for num in multiclassPredict:
+        value = format(num, '.2f')
+        
+        print(f"Integer part: {value}")
 
-    for num in resPredict:
-        integer_part = math.floor(num)
-        decimal_part = num - integer_part
-
-        decimal_str = str(decimal_part)[2:6]
-
-        # Print the result
-        print(f"Integer part: {integer_part}")
-        print(f"Decimal part: {decimal_str}")
-
-    if (resPredict[0] > resPredict[1] and resPredict[0] > resPredict[2]):
+    if (multiclassPredict[0] > multiclassPredict[1] and multiclassPredict[0] > multiclassPredict[2]):
         print("0")
-    elif (resPredict[1] > resPredict[0] and resPredict[1] > resPredict[2]):
+    elif (multiclassPredict[1] > multiclassPredict[0] and multiclassPredict[1] > multiclassPredict[2]):
         print("1")
-    elif (resPredict[2] > resPredict[0] and resPredict[2] > resPredict[1]):
+    elif (multiclassPredict[2] > multiclassPredict[0] and multiclassPredict[2] > multiclassPredict[1]):
         print("2")
 
-
-    effiResult = effiModel.predict(preprocessed_image)
-    print("---effinet---\n",effiResult)
-    effiPredict = effiResult[0]
-
-    print(effiPredict)
-
-    for num in effiPredict:
-        integer_part = math.floor(num)
-        decimal_part = num - integer_part
-
-        decimal_str = str(decimal_part)[2:6]
-
-        # Print the result
-        print(f"Integer part: {integer_part}")
-        print(f"Decimal part: {decimal_str}")
-
-    if (effiPredict[0] > effiPredict[1] and effiPredict[0] > effiPredict[2]):
-        print("0")
-    elif (effiPredict[1] > effiPredict[0] and effiPredict[1] > effiPredict[2]):
-        print("1")
-    elif (effiPredict[2] > effiPredict[0] and effiPredict[2] > effiPredict[1]):
-        print("2")
-
-    result = multiClasses[np.argmax(effiPredict)]
+    result = multiClasses[np.argmax(multiclassPredict)]
 
     return result
 
@@ -90,6 +55,10 @@ def prediction(inputImg):
     preprocessed_image = load_and_preprocess_image(img)
 
     predictions = binaryModel.predict(preprocessed_image)
+
+    print("\n\n\n---binary Decision---\n")
+    print(f"Normal Value: {format(predictions[0][0], '.2f')}")
+    print(f"Not Normal Value: {format(1 - predictions[0][0], '.2f')}")
 
     if predictions[0] > 0.5:
         return experimentMulti(preprocessed_image)

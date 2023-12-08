@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BarChart } from 'react-native-gifted-charts'
 import { AntDesign } from '@expo/vector-icons'
 import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator, TextInput } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
@@ -14,6 +15,12 @@ const { width, height } = Dimensions.get('window')
 let checkLoading = false
 export default function Page() {
 	let colorScheme = useColorScheme()
+	const [data, setData] = useState([
+		{ value: 0.1 * 100, label: 'Normal', frontColor: 'green', labelTextStyle: { color: 'gray' } },
+		{ value: 0.3 * 100, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: 'gray' } },
+		{ value: 0.5 * 100, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: 'gray' } },
+		{ value: 0.1 * 100, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: 'gray' } },
+	])
 
 	const [image, setImage] = useState(null)
 	const [loading, setLoading] = useState(false)
@@ -71,7 +78,7 @@ export default function Page() {
 		checkLoading = true
 		try {
 			// first get ipv4 address from cmd using 'ipconfig' and paste that here to work.
-			const res = await FileSystem.uploadAsync('http://192.168.10.6:8000/checkImage', image.uri, {
+			const res = await FileSystem.uploadAsync('http://192.168.10.9:8000/checkImage', image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
 				fieldName: 'image',
@@ -178,6 +185,19 @@ export default function Page() {
 									Kidney {result === 'Normal' ? 'is Normal' : `has ${result}`}
 								</Text>
 							</View>
+							<View style={[{ marginTop: height * 0.03, marginBottom: height * 0.03, marginStart: -50 }]}>
+								<BarChart
+									noOfSections={3}
+									barBorderRadius={2}
+									yAxisThickness={0.3}
+									yAxisTextStyle={{ color: 'gray' }}
+									data={data}
+								/>
+							</View>
+							<View
+								style={[
+									{ width: width * 0.9, height: height * 0.005, backgroundColor: colorScheme === 'dark' ? '#aaaaaa' : '#242424' },
+								]}></View>
 							<TextInput
 								style={[styles.loadInput, colorScheme === 'dark' ? darkStyles.loadInput : lightStyles.loadInput]}
 								placeholder='Save by Name'
@@ -296,10 +316,10 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0,0,0,0.8)',
 	},
 	loadingSec: {
-		width: width * 0.8,
-		height: height * 0.35,
-		top: height * 0.3,
-		left: width * 0.1,
+		width: width * 0.9,
+		height: height * 0.75,
+		top: height * 0.2,
+		left: width * 0.05,
 		borderRadius: 20,
 		borderWidth: 2,
 		alignItems: 'center',
