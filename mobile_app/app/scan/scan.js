@@ -15,11 +15,12 @@ const { width, height } = Dimensions.get('window')
 let checkLoading = false
 export default function Page() {
 	let colorScheme = useColorScheme()
+	let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
 	const [data, setData] = useState([
-		{ value: 0.1 * 100, label: 'Normal', frontColor: 'green', labelTextStyle: { color: 'gray' } },
-		{ value: 0.3 * 100, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: 'gray' } },
-		{ value: 0.5 * 100, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: 'gray' } },
-		{ value: 0.1 * 100, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: 'gray' } },
+		{ value: 0, label: 'onr', frontColor: 'green', labelTextStyle: { color: labelColor } },
+		{ value: 0, label: 'two', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+		{ value: 0, label: 'three', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+		{ value: 0, label: 'four', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 	])
 
 	const [image, setImage] = useState(null)
@@ -30,19 +31,23 @@ export default function Page() {
 		const request = await ImagePicker.requestMediaLibraryPermissionsAsync()
 
 		if (request.granted) {
-			const result = await ImagePicker.launchImageLibraryAsync({
-				mediaTypes: ImagePicker.MediaTypeOptions.Images,
-				allowsEditing: true,
-			})
-
-			if (!result.canceled) {
-				// Resize the selected image to 250x250
-				const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
-					format: 'jpeg',
-					compress: 1,
+			try {
+				const result = await ImagePicker.launchImageLibraryAsync({
+					mediaTypes: ImagePicker.MediaTypeOptions.Images,
+					allowsEditing: true,
 				})
 
-				setImage(resizedImage)
+				if (!result.canceled) {
+					// Resize the selected image to 250x250
+					const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
+						format: 'jpeg',
+						compress: 1,
+					})
+
+					setImage(resizedImage)
+				}
+			} catch (err) {
+				console.log(err)
 			}
 		} else {
 			alert('Cannot Access Images')
@@ -53,19 +58,23 @@ export default function Page() {
 		const request = await ImagePicker.requestCameraPermissionsAsync()
 
 		if (request.granted) {
-			const result = await ImagePicker.launchCameraAsync({
-				mediaTypes: ImagePicker.MediaTypeOptions.Images,
-				allowsEditing: true,
-			})
-
-			if (!result.canceled) {
-				// Resize the selected image to 250x250
-				const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
-					format: 'jpeg',
-					compress: 1,
+			try {
+				const result = await ImagePicker.launchCameraAsync({
+					mediaTypes: ImagePicker.MediaTypeOptions.Images,
+					allowsEditing: true,
 				})
 
-				setImage(resizedImage)
+				if (!result.canceled) {
+					// Resize the selected image to 250x250
+					const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
+						format: 'jpeg',
+						compress: 1,
+					})
+
+					setImage(resizedImage)
+				}
+			} catch (err) {
+				console.log(err)
 			}
 		} else {
 			alert('Cannot Access Camera')
@@ -86,7 +95,31 @@ export default function Page() {
 
 			const message = JSON.parse(res.body).message
 
-			if (checkLoading) setResult(message)
+			if (message.favour == 'normal') {
+				setData([
+					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+					{ value: message.cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				])
+
+				if (checkLoading) setResult('normal')
+			} else if (message.favour == 'not Normal') {
+				setData([
+					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+					{ value: message.cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				])
+
+				if (checkLoading) {
+					if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
+					else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
+					else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
+				}
+			}
+
+			console.log(message)
 		} catch (err) {
 			console.log(err)
 
@@ -94,6 +127,16 @@ export default function Page() {
 
 			setLoading(false)
 		}
+	}
+
+	const resetResults = () => {
+		setResult('')
+		setData([
+			{ value: 0, label: 'onr', frontColor: 'green', labelTextStyle: { color: labelColor } },
+			{ value: 0, label: 'two', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+			{ value: 0, label: 'three', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+			{ value: 0, label: 'four', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+		])
 	}
 
 	return (
@@ -190,7 +233,9 @@ export default function Page() {
 									noOfSections={3}
 									barBorderRadius={2}
 									yAxisThickness={0.3}
-									yAxisTextStyle={{ color: 'gray' }}
+									yAxisTextStyle={{ color: labelColor }}
+									xAxisColor={labelColor}
+									yAxisColor={labelColor}
 									data={data}
 								/>
 							</View>
@@ -208,7 +253,7 @@ export default function Page() {
 									onPress={() => {
 										setLoading(false)
 										checkLoading = false
-										setResult('')
+										resetResults()
 									}}
 									style={[
 										styles.loadBtn,
@@ -221,7 +266,7 @@ export default function Page() {
 									onPress={() => {
 										setLoading(false)
 										checkLoading = false
-										setResult('')
+										resetResults()
 									}}
 									style={[
 										styles.loadBtn,
