@@ -12,7 +12,6 @@ const wCameraIcon = require('../../assets/icons/wcameraicon.png')
 const wImageIcon = require('../../assets/icons/wimageicon.png')
 
 const { width, height } = Dimensions.get('window')
-let checkLoading = false
 export default function Page() {
 	let colorScheme = useColorScheme()
 	let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
@@ -84,10 +83,9 @@ export default function Page() {
 	const uploadimage = async () => {
 		console.log('scan')
 		await setLoading(true)
-		checkLoading = true
 		try {
 			// first get ipv4 address from cmd using 'ipconfig' and paste that here to work.
-			const res = await FileSystem.uploadAsync('http://192.168.10.9:8000/checkImage', image.uri, {
+			const res = await FileSystem.uploadAsync('http://192.168.10.7:8000/checkImage', image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
 				fieldName: 'image',
@@ -103,7 +101,7 @@ export default function Page() {
 					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 				])
 
-				if (checkLoading) setResult('normal')
+				setResult('normal')
 			} else if (message.favour == 'not Normal') {
 				setData([
 					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
@@ -112,24 +110,22 @@ export default function Page() {
 					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 				])
 
-				if (checkLoading) {
-					if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
-					else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
-					else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
-				}
+				if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
+				else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
+				else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
 			}
 
 			console.log(message)
 		} catch (err) {
 			console.log(err)
 
-			if (checkLoading) alert('Something Went wrong!! Try Again')
-
+			alert('Something Went wrong!! Try Again')
 			setLoading(false)
 		}
 	}
 
 	const resetResults = () => {
+		setLoading(false)
 		setResult('')
 		setData([
 			{ value: 0, label: 'onr', frontColor: 'green', labelTextStyle: { color: labelColor } },
@@ -201,7 +197,7 @@ export default function Page() {
 			{loading && (
 				<View style={[styles.loading]}>
 					{result === '' ? (
-						<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec]}>
+						<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec, { height: 250 }]}>
 							<View style={[styles.loadSec1]}>
 								<ActivityIndicator
 									size='large'
@@ -211,21 +207,12 @@ export default function Page() {
 									Scanning, Wait.
 								</Text>
 							</View>
-							<Pressable
-								onPress={() => {
-									console.log('cancel pressed')
-									setLoading(false)
-									checkLoading = false
-								}}
-								style={[styles.scanBtn, { marginBottom: -30 }, colorScheme === 'dark' ? darkStyles.scanBtn : lightStyles.scanBtn]}>
-								<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Cancel</Text>
-							</Pressable>
 						</View>
 					) : (
 						<View style={[styles.loadingSec, colorScheme === 'dark' ? darkStyles.loadingSec : lightStyles.loadingSec]}>
 							<View style={[styles.loadSec1, { marginTop: height * 0.06 }]}>
 								<Text style={[styles.loadText, colorScheme === 'dark' ? darkStyles.loadText : lightStyles.loadText]}>
-									Kidney {result === 'Normal' ? 'is Normal' : `has ${result}`}
+									Kidney {result === 'normal' ? 'is Normal' : `has ${result}`}
 								</Text>
 							</View>
 							<View style={[{ marginTop: height * 0.03, marginBottom: height * 0.03, marginStart: -50 }]}>
@@ -250,11 +237,7 @@ export default function Page() {
 							/>
 							<View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly' }}>
 								<Pressable
-									onPress={() => {
-										setLoading(false)
-										checkLoading = false
-										resetResults()
-									}}
+									onPress={resetResults}
 									style={[
 										styles.loadBtn,
 										{ marginBottom: -30 },
@@ -263,11 +246,7 @@ export default function Page() {
 									<Text style={[styles.btnText, colorScheme === 'dark' ? darkStyles.scanText : lightStyles.scanText]}>Save</Text>
 								</Pressable>
 								<Pressable
-									onPress={() => {
-										setLoading(false)
-										checkLoading = false
-										resetResults()
-									}}
+									onPress={resetResults}
 									style={[
 										styles.loadBtn,
 										{ marginBottom: -30 },
