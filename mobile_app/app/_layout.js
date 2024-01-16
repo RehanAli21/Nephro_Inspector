@@ -18,6 +18,10 @@ const Layout = () => {
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
+				name='main/main'
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
 				name='scan/scan'
 				options={{ headerShown: false }}
 			/>

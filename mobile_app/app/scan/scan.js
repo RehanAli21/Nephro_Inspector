@@ -139,7 +139,7 @@ export default function Page() {
 		<SafeAreaView style={[styles.container, colorScheme === 'dark' ? darkStyles.container : lightStyles.container]}>
 			<View style={[styles.v1]}>
 				<Link
-					href={'/'}
+					href={'main/main'}
 					asChild>
 					<Pressable>
 						<AntDesign
