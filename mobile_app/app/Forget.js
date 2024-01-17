@@ -2,40 +2,42 @@ import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, V
 import { Link } from 'expo-router'
 
 const { width, height } = Dimensions.get('window')
-export default function Login() {
+export default function Forget() {
 	const colorScheme = useColorScheme()
 
 	return (
 		<SafeAreaView style={[styles.container, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>
-			<Text style={[styles.text, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>Nephro Inspector</Text>
+			<Text style={[styles.text, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>Reset Password</Text>
 			<View style={[styles.secondary]}>
 				<TextInput
-					placeholder='Username'
+					placeholder='Enter Username'
+					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
+					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
+				/>
+				<TextInput
+					placeholder='Recover Text'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
 					secureTextEntry={true}
 					autoCorrect={false}
-					placeholder='Password'
+					placeholder='Enter New Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
-				<Link
-					href={'/Forget'}
-					style={[styles.smallText, colorScheme === 'dark' ? darkStyle.text : lightStyle.text]}>
-					<Text>Forget Password?</Text>
-				</Link>
+				<TextInput
+					secureTextEntry={true}
+					autoCorrect={false}
+					placeholder='Confirm Password'
+					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
+					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
+				/>
 				<Pressable
-					onPress={() => alert('Login')}
+					onPress={() => alert('Forget')}
 					style={[styles.scanBtn, colorScheme === 'dark' ? darkStyle.scanBtn : lightStyle.scanBtn]}>
-					<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyle.text : lightStyle.text]}>LOGIN</Text>
+					<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyle.text : lightStyle.text]}>Change Password</Text>
 				</Pressable>
-				<Link
-					href={'/Signup'}
-					style={[styles.footerText, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}>
-					<Text>New User?</Text>
-				</Link>
 			</View>
 		</SafeAreaView>
 	)
@@ -47,11 +49,10 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	text: {
-		fontWeight: '900',
 		textAlign: 'center',
 		fontSize: 25,
-		marginTop: height * 0.12,
-		height: height * 0.15,
+		marginTop: height * 0.05,
+		height: height * 0.1,
 	},
 	secondary: {
 		display: 'flex',
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
 		padding: 10,
 		paddingStart: 15,
 		paddingEnd: 15,
-		margin: 20,
+		margin: 15,
 		borderRadius: 5,
 		fontSize: 16,
 		width: width * 0.6,
@@ -86,12 +87,6 @@ const styles = StyleSheet.create({
 	scanText: {
 		fontSize: 16,
 		fontWeight: 400,
-	},
-	footerText: {
-		position: 'absolute',
-		bottom: 0,
-		paddingBottom: 5,
-		borderBottomWidth: 2,
 	},
 })
 

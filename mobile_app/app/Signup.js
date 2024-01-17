@@ -15,11 +15,15 @@ export default function Signup() {
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
+					secureTextEntry={true}
+					autoCorrect={false}
 					placeholder='Enter Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
+					secureTextEntry={true}
+					autoCorrect={false}
 					placeholder='Confirm Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
