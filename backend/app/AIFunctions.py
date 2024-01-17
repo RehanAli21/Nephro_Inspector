@@ -6,11 +6,11 @@ import math
 import random
 from tensorflow.keras.preprocessing import image
 
-binaryModelPath = os.getcwd() + '/app/models/BinaryModel.h5'
+binaryModelPath = os.getcwd() + '/app/AI_Models/BinaryModel.h5'
 
 binaryModel = tf.keras.models.load_model(binaryModelPath)
 
-multiclassModelPath = os.getcwd() + '/app/models/multiclassModel.h5'
+multiclassModelPath = os.getcwd() + '/app/AI_Models/multiclassModel.h5'
 
 multiclassModel = tf.keras.models.load_model(multiclassModelPath)
 
