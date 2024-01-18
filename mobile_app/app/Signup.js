@@ -1,20 +1,60 @@
 import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
 import { Link } from 'expo-router'
+import axios from 'axios'
+const { url } = require('./config.json')
+import { useState } from 'react'
 
 const { width, height } = Dimensions.get('window')
 export default function Signup() {
 	const colorScheme = useColorScheme()
+	const [username, setUsername] = useState('')
+	const [pwd, setPwd] = useState('')
+	const [confirmPwd, setConfirmPwd] = useState('')
+	const [secret, setSecret] = useState('')
+
+	const addUser = async () => {
+		user = {
+			username,
+			pwd,
+			confirmPwd,
+			secret,
+		}
+
+		if (username != '' && pwd != '' && confirmPwd != '' && secret != '') {
+			if (pwd == confirmPwd) {
+				let user = {
+					username: username,
+					password: pwd,
+					secret: secret,
+				}
+
+				try {
+					const res = await axios.post(`${url}/users/add`, user)
+
+					console.log(res)
+				} catch (err) {
+					alert('An unexpected error occurred')
+				}
+			} else {
+				alert('Password and Confirm Password is not same!')
+			}
+		} else {
+			alert('Fill All Fields')
+		}
+	}
 
 	return (
 		<SafeAreaView style={[styles.container, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>
 			<Text style={[styles.text, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>Nephro Inspector</Text>
 			<View style={[styles.secondary]}>
 				<TextInput
+					onChangeText={text => setUsername(text)}
 					placeholder='Enter Username'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
+					onChangeText={text => setPwd(text)}
 					secureTextEntry={true}
 					autoCorrect={false}
 					placeholder='Enter Password'
@@ -22,6 +62,7 @@ export default function Signup() {
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
+					onChangeText={text => setConfirmPwd(text)}
 					secureTextEntry={true}
 					autoCorrect={false}
 					placeholder='Confirm Password'
@@ -29,12 +70,13 @@ export default function Signup() {
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
+					onChangeText={text => setSecret(text)}
 					placeholder='Text to recover password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<Pressable
-					onPress={() => alert('Signup')}
+					onPress={addUser}
 					style={[styles.scanBtn, colorScheme === 'dark' ? darkStyle.scanBtn : lightStyle.scanBtn]}>
 					<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyle.text : lightStyle.text]}>Create</Text>
 				</Pressable>

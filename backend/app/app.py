@@ -6,6 +6,8 @@ from typing import Annotated
 from . import models
 from .database import SessionLocal, engine
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+import bcrypt
 
 app = FastAPI()
 
@@ -14,7 +16,7 @@ models.Base.metadata.create_all(bind=engine)
 class UserBase(BaseModel):
     username: str
     password: str
-    screat: str
+    secret: str
 
 def get_db():
     db = SessionLocal()
@@ -45,6 +47,25 @@ def getUser(user_id: int, db: db_dependency):
         raise HTTPException(status_code=404, detail="User not found")
     
     return user
+
+def get_password_hash(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bytes(bcrypt.gensalt()))
+
+def verify_password(plain_password, hashed_password):
+    return bcrypt.checkpw(plain_password, hashed_password)
+
+@app.post("/users/add", status_code=status.HTTP_201_CREATED)
+def addNewUser(user: UserBase, db: db_dependency):
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(username=user.username, password=hashed_password, secret=user.secret)
+    
+    try:
+        db.add(db_user)
+        db.commit()
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 @app.post("/checkImage")
 async def predictionRoute(image: UploadFile = File(...)):

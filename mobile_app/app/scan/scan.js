@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
 import { Link } from 'expo-router'
+const { url } = require('../config.json')
 const bCameraIcon = require('../../assets/icons/bcameraicon.png')
 const bImageIcon = require('../../assets/icons/bimageicon.png')
 const wCameraIcon = require('../../assets/icons/wcameraicon.png')
@@ -84,8 +85,7 @@ export default function Page() {
 		console.log('scan')
 		await setLoading(true)
 		try {
-			// first get ipv4 address from cmd using 'ipconfig' and paste that here to work.
-			const res = await FileSystem.uploadAsync('http://192.168.10.7:8000/checkImage', image.uri, {
+			const res = await FileSystem.uploadAsync(`${url}/checkImage`, image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
 				fieldName: 'image',

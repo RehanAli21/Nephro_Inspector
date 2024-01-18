@@ -1,0 +1,4 @@
+{
+    "url": "http://192.168.10.3:8000", 
+    "url comment": "if url does not works, then first get ipv4 address from cmd using 'ipconfig' and paste that in url to work."
+}
