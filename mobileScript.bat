@@ -1,0 +1,1 @@
+cd mobile_app && npm start
