@@ -1,8 +1,9 @@
 import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import axios from 'axios'
 const { url } = require('./config.json')
 import { useState } from 'react'
+import ScreenMsg from './component/ScreenMsg'
 
 const { width, height } = Dimensions.get('window')
 export default function Signup() {
@@ -12,14 +13,9 @@ export default function Signup() {
 	const [confirmPwd, setConfirmPwd] = useState('')
 	const [secret, setSecret] = useState('')
 
-	const addUser = async () => {
-		user = {
-			username,
-			pwd,
-			confirmPwd,
-			secret,
-		}
+	const [showMsg, setShowMsg] = useState('')
 
+	const addUser = async () => {
 		if (username != '' && pwd != '' && confirmPwd != '' && secret != '') {
 			if (pwd == confirmPwd) {
 				let user = {
@@ -29,11 +25,23 @@ export default function Signup() {
 				}
 
 				try {
+					setShowMsg('Wait, Creating New User')
 					const res = await axios.post(`${url}/users/add`, user)
 
-					console.log(res)
+					if (res.status == 201) {
+						setShowMsg('User Created Successfully!!!')
+
+						setTimeout(() => router.replace('/'), 500)
+					} else {
+						showMsg('')
+					}
 				} catch (err) {
-					alert('An unexpected error occurred')
+					setShowMsg('')
+					if (err.response.status == 400) {
+						alert(`"${username}", This username Already exists!`)
+					} else {
+						alert(`An unexpected error occurred`)
+					}
 				}
 			} else {
 				alert('Password and Confirm Password is not same!')
@@ -42,6 +50,13 @@ export default function Signup() {
 			alert('Fill All Fields')
 		}
 	}
+
+	let confirmPwdBorderColor =
+		confirmPwd != '' && pwd == confirmPwd
+			? { borderColor: 'green', borderBottomWidth: 4 }
+			: confirmPwd != '' && pwd != confirmPwd
+			? { borderColor: 'red', borderBottomWidth: 4 }
+			: {}
 
 	return (
 		<SafeAreaView style={[styles.container, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>
@@ -67,7 +82,7 @@ export default function Signup() {
 					autoCorrect={false}
 					placeholder='Confirm Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
-					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
+					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input, confirmPwdBorderColor]}
 				/>
 				<TextInput
 					onChangeText={text => setSecret(text)}
@@ -86,6 +101,7 @@ export default function Signup() {
 					<Text>Already User?</Text>
 				</Link>
 			</View>
+			{showMsg != '' && <ScreenMsg msg={showMsg} />}
 		</SafeAreaView>
 	)
 }

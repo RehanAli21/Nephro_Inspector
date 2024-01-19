@@ -62,6 +62,8 @@ def addNewUser(user: UserBase, db: db_dependency):
     try:
         db.add(db_user)
         db.commit()
+
+        return {"detail": "User Created"}
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Username already exists")
     except Exception as e:
