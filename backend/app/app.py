@@ -7,8 +7,9 @@ from . import models
 from .database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-import bcrypt
+from passlib.context import CryptContext
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
@@ -49,10 +50,7 @@ def getUser(user_id: int, db: db_dependency):
     return user
 
 def get_password_hash(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bytes(bcrypt.gensalt()))
-
-def verify_password(plain_password, hashed_password):
-    return bcrypt.checkpw(plain_password, hashed_password)
+    return pwd_context.hash(password)
 
 @app.post("/users/add", status_code=status.HTTP_201_CREATED)
 def addNewUser(user: UserBase, db: db_dependency):
@@ -67,6 +65,28 @@ def addNewUser(user: UserBase, db: db_dependency):
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Username already exists")
     except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+@app.post("/users/getUser", status_code=status.HTTP_200_OK)
+def getUserAuth(username: str, password: str, db: db_dependency):
+    try:
+        user = db.query(models.User).filter(models.User.username == username).first()
+
+        if user is None:
+            return {"detail": "User Not Found"}
+        
+        verify = verify_password(password, user.password)
+        if (verify):
+            return {"detail": "User found", "user": {"username": username, "password": password}}
+        else:
+            return {"detail": "Password is wrong"}
+        
+    except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 @app.post("/checkImage")
