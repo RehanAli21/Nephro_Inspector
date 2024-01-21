@@ -72,18 +72,20 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 @app.post("/users/getUser", status_code=status.HTTP_200_OK)
-def getUserAuth(username: str, password: str, db: db_dependency):
+def getUserAuth(data: dict, db: db_dependency):
+    username = data["username"]
+    password = data["password"]
     try:
         user = db.query(models.User).filter(models.User.username == username).first()
 
         if user is None:
-            return {"detail": "User Not Found"}
+            return {"detail": "User Not Found", "passwordWrong": False, "userFound": False}
         
         verify = verify_password(password, user.password)
         if (verify):
-            return {"detail": "User found", "user": {"username": username, "password": password}}
+            return {"detail": "User found", "passwordWrong": False, "userFound": True}
         else:
-            return {"detail": "Password is wrong"}
+            return {"detail": "Password is wrong", "passwordWrong": True, "userFound": False}
         
     except Exception as e:
         print(e)

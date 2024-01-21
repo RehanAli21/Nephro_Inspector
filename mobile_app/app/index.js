@@ -1,9 +1,40 @@
-import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
-import { Link } from 'expo-router'
+import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions, Keyboard } from 'react-native'
+import { Link, router } from 'expo-router'
+import { useState } from 'react'
+import axios from 'axios'
+const { url } = require('./config.json')
+import ScreenMsg from './component/ScreenMsg'
 
 const { width, height } = Dimensions.get('window')
 export default function Login() {
 	const colorScheme = useColorScheme()
+
+	const [username, setUsername] = useState('')
+	const [password, setPassword] = useState('')
+	const [error, setError] = useState('')
+	const [showMsg, setShowMsg] = useState('')
+
+	const loginFunc = async () => {
+		Keyboard.dismiss()
+		if (username == '' && password == '') return alert('Fill All Fields')
+
+		try {
+			setShowMsg('Please Wait, Signing In.')
+			const res = await axios.post(`${url}/users/getUser`, { username, password })
+
+			setShowMsg('')
+
+			if (res.data['passwordWrong'] == true) return setError('Password is incorrect')
+
+			if (res.data['userFound'] == false) return setError('Username is incorrect')
+
+			router.replace('/main/main')
+		} catch (err) {
+			console.log(err)
+			setShowMsg('')
+			alert('Error occured, Please try agan.')
+		}
+	}
 
 	return (
 		<SafeAreaView style={[styles.container, colorScheme === 'dark' ? darkStyle.bgAndText : lightStyle.bgAndText]}>
@@ -13,6 +44,7 @@ export default function Login() {
 					placeholder='Username'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
+					onChangeText={text => setUsername(text)}
 				/>
 				<TextInput
 					secureTextEntry={true}
@@ -20,6 +52,7 @@ export default function Login() {
 					placeholder='Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
+					onChangeText={text => setPassword(text)}
 				/>
 				<Link
 					href={'/Forget'}
@@ -27,16 +60,18 @@ export default function Login() {
 					<Text>Forget Password?</Text>
 				</Link>
 				<Pressable
-					onPress={() => alert('Login')}
+					onPress={loginFunc}
 					style={[styles.scanBtn, colorScheme === 'dark' ? darkStyle.scanBtn : lightStyle.scanBtn]}>
 					<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyle.text : lightStyle.text]}>LOGIN</Text>
 				</Pressable>
+				{error != '' && <Text style={styles.errText}>{error}</Text>}
 				<Link
 					href={'/Signup'}
 					style={[styles.footerText, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}>
 					<Text>New User?</Text>
 				</Link>
 			</View>
+			{showMsg != '' && <ScreenMsg msg={showMsg} />}
 		</SafeAreaView>
 	)
 }
@@ -92,6 +127,13 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		paddingBottom: 5,
 		borderBottomWidth: 2,
+	},
+	errText: {
+		color: 'rgb(255, 50, 50)',
+		fontWeight: '700',
+		letterSpacing: 1.5,
+		fontSize: 20,
+		marginTop: 50,
 	},
 })
 

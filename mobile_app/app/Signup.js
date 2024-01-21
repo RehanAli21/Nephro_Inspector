@@ -1,4 +1,4 @@
-import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
+import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions, Keyboard } from 'react-native'
 import { Link, router } from 'expo-router'
 import axios from 'axios'
 const { url } = require('./config.json')
@@ -16,6 +16,8 @@ export default function Signup() {
 	const [showMsg, setShowMsg] = useState('')
 
 	const addUser = async () => {
+		Keyboard.dismiss()
+
 		if (username != '' && pwd != '' && confirmPwd != '' && secret != '') {
 			if (pwd == confirmPwd) {
 				let user = {

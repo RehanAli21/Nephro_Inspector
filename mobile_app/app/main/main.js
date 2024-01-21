@@ -1,5 +1,6 @@
 import { Pressable, Text, Image, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions } from 'react-native'
-import { Link } from 'expo-router'
+import { Link, useNavigation } from 'expo-router'
+import { useEffect } from 'react'
 const wscanicon = require('../../assets/icons/wscanicon.png')
 const bscanicon = require('../../assets/icons/bscanicon.png')
 const wrecordicon = require('../../assets/icons/wrecordicon.png')
@@ -8,6 +9,14 @@ const brecordicon = require('../../assets/icons/brecordicon.png')
 const { width, height } = Dimensions.get('window')
 export default function Main() {
 	const colorScheme = useColorScheme()
+	const navigation = useNavigation()
+
+	useEffect(() => {
+		navigation.addListener('beforeRemove', e => {
+			e.preventDefault()
+			console.log('onback')
+		})
+	}, [])
 
 	return (
 		<SafeAreaView style={colorScheme === 'dark' ? darkStyles.container : lightStyles.container}>
