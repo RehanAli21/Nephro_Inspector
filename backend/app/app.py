@@ -91,6 +91,30 @@ def getUserAuth(data: dict, db: db_dependency):
         print(e)
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
+@app.post("/users/changePassword", status_code=status.HTTP_200_OK)
+def changePassword(user: UserBase, db: db_dependency):
+    try:
+        dbUser = db.query(models.User).filter(models.User.username == user.username).first()
+
+        if dbUser is None:
+            return {"incorrectUsername": "OK"}
+        
+        if user.secret != dbUser.secret:
+            return {"incorrectSecret": "OK"}
+        
+        hashed_password = get_password_hash(user.password)
+        
+        db.query(models.User).filter(models.User.username == user.username).update({"password": hashed_password})
+
+        db.commit()
+
+        return {"detail": "Password Changes", "done": "OK"}
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+
 @app.post("/checkImage")
 async def predictionRoute(image: UploadFile = File(...)):
     try:

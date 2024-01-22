@@ -35,7 +35,7 @@ export default function Signup() {
 
 						setTimeout(() => router.replace('/'), 500)
 					} else {
-						showMsg('')
+						setShowMsg('')
 					}
 				} catch (err) {
 					setShowMsg('')
