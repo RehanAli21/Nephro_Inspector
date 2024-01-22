@@ -1,9 +1,10 @@
 import { Pressable, Text, TextInput, SafeAreaView, StyleSheet, useColorScheme, View, Dimensions, Keyboard } from 'react-native'
 import { Link, router } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios'
 const { url } = require('./config.json')
 import ScreenMsg from './component/ScreenMsg'
+import * as secureStore from 'expo-secure-store'
 
 const { width, height } = Dimensions.get('window')
 export default function Login() {
@@ -13,6 +14,18 @@ export default function Login() {
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
 	const [showMsg, setShowMsg] = useState('')
+
+	async function checkForLoginData() {
+		const isloggedIn = await secureStore.getItemAsync('loggedIn')
+		if (isloggedIn == 'yes') {
+			const usernameValue = await secureStore.getItemAsync('username')
+			if (usernameValue) {
+				router.replace('/main/main')
+			}
+		}
+	}
+
+	checkForLoginData()
 
 	const loginFunc = async () => {
 		Keyboard.dismiss()
@@ -27,6 +40,9 @@ export default function Login() {
 			if (res.data['passwordWrong'] == true) return setError('Password is incorrect')
 
 			if (res.data['userFound'] == false) return setError('Username is incorrect')
+
+			await secureStore.setItemAsync('username', username)
+			await secureStore.setItemAsync('loggedIn', 'yes')
 
 			router.replace('/main/main')
 		} catch (err) {
