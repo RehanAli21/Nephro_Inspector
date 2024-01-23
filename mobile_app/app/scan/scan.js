@@ -5,6 +5,7 @@ import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View,
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
+import * as secureStore from 'expo-secure-store'
 import { Link } from 'expo-router'
 const { url } = require('../config.json')
 const bCameraIcon = require('../../assets/icons/bcameraicon.png')
@@ -26,6 +27,14 @@ export default function Page() {
 	const [image, setImage] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [result, setResult] = useState('')
+	const [username, setUsername] = useState('')
+
+	const getUsername = async () => {
+		const res = await secureStore.getItemAsync('username')
+
+		if (res) setUsername(res)
+	}
+	getUsername()
 
 	const selectImage = async () => {
 		const request = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -85,7 +94,7 @@ export default function Page() {
 		console.log('scan')
 		await setLoading(true)
 		try {
-			const res = await FileSystem.uploadAsync(`${url}/checkImage`, image.uri, {
+			const res = await FileSystem.uploadAsync(`${url}/checkImage/${username}`, image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
 				fieldName: 'image',

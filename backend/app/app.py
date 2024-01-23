@@ -8,6 +8,9 @@ from .database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from passlib.context import CryptContext
+from PIL import Image
+from datetime import datetime
+import json
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
@@ -115,12 +118,22 @@ def changePassword(user: UserBase, db: db_dependency):
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
-@app.post("/checkImage")
-async def predictionRoute(image: UploadFile = File(...)):
+@app.post("/checkImage/{username}", status_code=status.HTTP_201_CREATED)
+async def predictionRoute(username: str, db: db_dependency, image: UploadFile = File(...)):
     try:
         result = AIFunctions.prediction(image)
 
-        return {"message": result}
+        img = Image.open(image.file).convert("L")
+
+        time = datetime.now()
+        imageName = f"./images/{time.strftime('%H_%M_%S')}_username.png" 
+        img.save(imageName)
+        db_record = models.Record(username=username, result=json.dumps(result), imageurl=imageName, saved=False)
+
+        db.add(db_record)
+        db.commit()
+        
+        return {"message": result, "detail": "Record Created"}
     except Exception as e:
         print(str(e))
         return {"error": "An error occurred while processing the image"}
