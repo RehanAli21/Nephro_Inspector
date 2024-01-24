@@ -126,14 +126,30 @@ async def predictionRoute(username: str, db: db_dependency, image: UploadFile = 
         img = Image.open(image.file).convert("L")
 
         time = datetime.now()
-        imageName = f"./images/{time.strftime('%H_%M_%S')}_username.png" 
+        imageName = f"./images/{time.strftime('%H_%M_%S')}_{username}.jpeg" 
         img.save(imageName)
         db_record = models.Record(username=username, result=json.dumps(result), imageurl=imageName, saved=False)
 
         db.add(db_record)
         db.commit()
         
-        return {"message": result, "detail": "Record Created"}
+        return {"message": result, "detail": "Record Created", "imagePath": imageName}
+    except Exception as e:
+        print(str(e))
+        return {"error": "An error occurred while processing the image"}
+    
+
+@app.get("/saveImage/", status_code=status.HTTP_200_OK)
+def markImageSave(imagePath: str, username: str, name: str, recordName: str, db: db_dependency):
+    try:
+        if (name == ''):
+            name = imagePath.split('/')[2]
+
+        db.query(models.Record).filter(models.Record.username == username, models.Record.imageurl == imagePath).update({"imgnamebyuser": name, "recordname": recordName, "saved": True})
+
+        db.commit()
+
+        return {"saved": "true"}
     except Exception as e:
         print(str(e))
         return {"error": "An error occurred while processing the image"}

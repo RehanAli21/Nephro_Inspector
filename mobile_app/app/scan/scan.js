@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { BarChart } from 'react-native-gifted-charts'
 import { AntDesign } from '@expo/vector-icons'
-import { Image, Text, SafeAreaView, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator, TextInput } from 'react-native'
+import { Image, Text, SafeAreaView, Alert, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator, TextInput } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as FileSystem from 'expo-file-system'
 import * as secureStore from 'expo-secure-store'
+import * as MediaLibrary from 'expo-media-library'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Link } from 'expo-router'
+import axios from 'axios'
 const { url } = require('../config.json')
 const bCameraIcon = require('../../assets/icons/bcameraicon.png')
 const bImageIcon = require('../../assets/icons/bimageicon.png')
@@ -28,6 +31,11 @@ export default function Page() {
 	const [loading, setLoading] = useState(false)
 	const [result, setResult] = useState('')
 	const [username, setUsername] = useState('')
+	const [imagePathFromScanAPI, setImagePathFromScanAPI] = useState('')
+	const [recordName, setRecordName] = useState('')
+	const [imageNameFromAsset, setImageNameFromAsset] = useState('')
+
+	const [permissionResponse, requestPermission] = MediaLibrary.usePermissions()
 
 	const getUsername = async () => {
 		const res = await secureStore.getItemAsync('username')
@@ -91,7 +99,6 @@ export default function Page() {
 	}
 
 	const uploadimage = async () => {
-		console.log('scan')
 		await setLoading(true)
 		try {
 			const res = await FileSystem.uploadAsync(`${url}/checkImage/${username}`, image.uri, {
@@ -101,8 +108,7 @@ export default function Page() {
 			})
 
 			const message = JSON.parse(res.body).message
-
-			if (message.favour == 'normal') {
+			if (message.favour) {
 				setData([
 					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
 					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
@@ -110,21 +116,18 @@ export default function Page() {
 					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 				])
 
-				setResult('normal')
-			} else if (message.favour == 'not Normal') {
-				setData([
-					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
-					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-					{ value: message.cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-				])
-
-				if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
-				else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
-				else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
+				if (message.favour == 'normal') {
+					setResult('normal')
+				} else if (message.favour == 'not Normal') {
+					if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
+					else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
+					else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
+				}
 			}
 
-			console.log(message)
+			const { imagePath } = JSON.parse(res.body)
+
+			setImagePathFromScanAPI(imagePath)
 		} catch (err) {
 			console.log(err)
 
@@ -142,6 +145,94 @@ export default function Page() {
 			{ value: 0, label: 'three', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 			{ value: 0, label: 'four', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 		])
+	}
+
+	const CheckBeforeSaveResult = () => {
+		if (recordName == '')
+			Alert.alert('Confirmation', 'Do you want save record without name?', [{ text: 'Yes', onPress: saveResult }, { text: 'No' }])
+	}
+
+	const saveResult = async () => {
+		if (permissionResponse.granted != true) alert('Please give permission to access media')
+
+		await requestPermission()
+
+		if (permissionResponse.granted != true) return alert('Permission denied to access media')
+
+		try {
+			const asset = await MediaLibrary.createAssetAsync(image.uri)
+			const album = await MediaLibrary.getAlbumAsync('nephro_app')
+			if (album == null) {
+				await MediaLibrary.createAlbumAsync('nephro_app', asset, true)
+			} else {
+				await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
+			}
+
+			setImageNameFromAsset(asset.filename)
+
+			const imageName = asset.filename
+			const recordNameAPIPARAM = recordName == '' ? 'unknown' : recordName
+
+			await axios.get(
+				`${url}/saveImage/?imagePath=${imagePathFromScanAPI}&username=${username}&name=${imageName}&recordName=${recordNameAPIPARAM}`
+			)
+
+			const recordData = await AsyncStorage.getItem('recorddata')
+
+			if (recordData !== null) {
+				saveRecordData(recordData)
+			}
+		} catch (err) {
+			console.log(err)
+
+			if (err instanceof ReferenceError) {
+				saveRecordData(null)
+			}
+
+			alert('Something Went wrong!! Try Again')
+		}
+
+		resetResults()
+	}
+
+	const saveRecordData = async keyData => {
+		let err = false
+
+		let rName = recordName == '' ? 'unknown' : recordName
+		const d = {
+			username: username,
+			result: data,
+			favour: result == 'normal' ? 'normal' : 'notnormal',
+			imageName: imageNameFromAsset,
+		}
+
+		if (keyData == null) {
+			console.log('null')
+			let newData = {}
+			newData[rName] = d
+
+			try {
+				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
+			} catch (e) {
+				console.log(e)
+				err = true
+			}
+		} else {
+			console.log('not null')
+			let newData = JSON.parse(keyData)
+
+			newData[rName] = d
+
+			try {
+				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
+			} catch (e) {
+				console.log(e)
+				err = true
+			}
+		}
+
+		if (err) alert('Something went wrong on saving')
+		else alert('Record has been saved.')
 	}
 
 	return (
@@ -240,13 +331,14 @@ export default function Page() {
 									{ width: width * 0.9, height: height * 0.005, backgroundColor: colorScheme === 'dark' ? '#aaaaaa' : '#242424' },
 								]}></View>
 							<TextInput
+								onChangeText={text => setRecordName(text)}
 								style={[styles.loadInput, colorScheme === 'dark' ? darkStyles.loadInput : lightStyles.loadInput]}
-								placeholder='Save by Name'
+								placeholder='Save Record by Name'
 								placeholderTextColor={colorScheme === 'dark' ? '#aaaaaa' : '#242424'}
 							/>
 							<View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly' }}>
 								<Pressable
-									onPress={resetResults}
+									onPress={CheckBeforeSaveResult}
 									style={[
 										styles.loadBtn,
 										{ marginBottom: -30 },
