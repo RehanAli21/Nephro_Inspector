@@ -145,7 +145,7 @@ def markImageSave(imagePath: str, username: str, name: str, recordName: str, db:
         if (name == ''):
             name = imagePath.split('/')[2]
 
-        db.query(models.Record).filter(models.Record.username == username, models.Record.imageurl == imagePath).update({"imgnamebyuser": name, "recordname": recordName, "saved": True})
+        db.query(models.Record).filter(models.Record.username == username, models.Record.imageurl == imagePath).update({"imgname": name, "recordname": recordName, "saved": True})
 
         db.commit()
 
@@ -153,3 +153,22 @@ def markImageSave(imagePath: str, username: str, name: str, recordName: str, db:
     except Exception as e:
         print(str(e))
         return {"error": "An error occurred while processing the image"}
+    
+
+@app.get("/checkData/{username}", status_code=status.HTTP_200_OK)
+def checkDataAvailability(username: str, db: db_dependency):
+    try:
+        db_records = db.query(models.Record).filter(models.Record.username == username, models.Record.saved == True)
+
+        if (db_records is None):
+            return {"details": "NoData"}
+        
+        if(db_records.count() > 0):
+            return {"details": "Data"}
+        else:
+            return {"details": "NoData"}
+        
+    except Exception as e:
+        print(e)
+    
+    
