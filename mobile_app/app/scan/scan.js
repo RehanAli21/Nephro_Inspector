@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BarChart } from 'react-native-gifted-charts'
 import { AntDesign } from '@expo/vector-icons'
 import { Image, Text, SafeAreaView, Alert, StyleSheet, useColorScheme, Pressable, View, Dimensions, ActivityIndicator, TextInput } from 'react-native'
@@ -17,6 +17,7 @@ const wCameraIcon = require('../../assets/icons/wcameraicon.png')
 const wImageIcon = require('../../assets/icons/wimageicon.png')
 
 const { width, height } = Dimensions.get('window')
+let tempImageNameFromAsset = ''
 export default function Page() {
 	let colorScheme = useColorScheme()
 	let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
@@ -37,12 +38,14 @@ export default function Page() {
 
 	const [permissionResponse, requestPermission] = MediaLibrary.usePermissions()
 
+	useEffect(() => {
+		getUsername()
+	}, [])
+
 	const getUsername = async () => {
 		const res = await secureStore.getItemAsync('username')
-
 		if (res) setUsername(res)
 	}
-	getUsername()
 
 	const selectImage = async () => {
 		const request = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -150,6 +153,7 @@ export default function Page() {
 	const CheckBeforeSaveResult = () => {
 		if (recordName == '')
 			Alert.alert('Confirmation', 'Do you want save record without name?', [{ text: 'Yes', onPress: saveResult }, { text: 'No' }])
+		else saveResult()
 	}
 
 	const saveResult = async () => {
@@ -168,7 +172,8 @@ export default function Page() {
 				await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
 			}
 
-			setImageNameFromAsset(asset.filename)
+			tempImageNameFromAsset = asset.filename
+			await setImageNameFromAsset(asset.filename)
 
 			const imageName = asset.filename
 			const recordNameAPIPARAM = recordName == '' ? 'unknown' : recordName
@@ -177,10 +182,12 @@ export default function Page() {
 				`${url}/saveImage/?imagePath=${imagePathFromScanAPI}&username=${username}&name=${imageName}&recordName=${recordNameAPIPARAM}`
 			)
 
-			const recordData = await AsyncStorage.getItem('recorddata')
+			const recordData = await AsyncStorage.getItem('nephro_data')
 
 			if (recordData !== null) {
 				saveRecordData(recordData)
+			} else {
+				saveRecordData(null)
 			}
 		} catch (err) {
 			console.log(err)
@@ -198,18 +205,19 @@ export default function Page() {
 	const saveRecordData = async keyData => {
 		let err = false
 
+		console.log('image name: ', imageNameFromAsset, tempImageNameFromAsset)
+
 		let rName = recordName == '' ? 'unknown' : recordName
 		const d = {
+			recordName: rName,
 			username: username,
 			result: data,
 			favour: result == 'normal' ? 'normal' : 'notnormal',
-			imageName: imageNameFromAsset,
+			imageName: imageNameFromAsset == '' ? tempImageNameFromAsset : imageNameFromAsset,
 		}
 
 		if (keyData == null) {
-			console.log('null')
-			let newData = {}
-			newData[rName] = d
+			let newData = [d]
 
 			try {
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
@@ -218,10 +226,9 @@ export default function Page() {
 				err = true
 			}
 		} else {
-			console.log('not null')
 			let newData = JSON.parse(keyData)
 
-			newData[rName] = d
+			newData.push(d)
 
 			try {
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
@@ -233,6 +240,8 @@ export default function Page() {
 
 		if (err) alert('Something went wrong on saving')
 		else alert('Record has been saved.')
+
+		tempImageNameFromAsset = ''
 	}
 
 	return (
@@ -244,7 +253,7 @@ export default function Page() {
 					<Pressable>
 						<AntDesign
 							name='leftcircleo'
-							size={width * 0.07}
+							size={width * 0.08}
 							color={colorScheme === 'dark' ? '#fafafa' : '#242424'}
 						/>
 					</Pressable>

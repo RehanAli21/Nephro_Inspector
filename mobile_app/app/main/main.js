@@ -96,15 +96,17 @@ export default function Main() {
 					</Link>
 				</View>
 				<View style={colorScheme === 'dark' ? darkStyles.secondView : lightStyles.secondView}>
-					<Pressable
-						onPress={() => alert('record is not implemented yet!')}
-						style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
-						<Image
-							style={{ width: width * 0.25, height: width * 0.262 }}
-							source={colorScheme === 'dark' ? wrecordicon : brecordicon}
-						/>
-						<Text style={colorScheme === 'dark' ? darkStyles.secondText : lightStyles.secondText}>Record</Text>
-					</Pressable>
+					<Link
+						href={'/records/records'}
+						asChild>
+						<Pressable style={{ alignContent: 'center', alignSelf: 'center', alignItems: 'center' }}>
+							<Image
+								style={{ width: width * 0.25, height: width * 0.262 }}
+								source={colorScheme === 'dark' ? wrecordicon : brecordicon}
+							/>
+							<Text style={colorScheme === 'dark' ? darkStyles.secondText : lightStyles.secondText}>Record</Text>
+						</Pressable>
+					</Link>
 				</View>
 			</View>
 		</SafeAreaView>
@@ -150,6 +152,7 @@ const lightStyles = StyleSheet.create({
 		padding: 2,
 		marginEnd: 10,
 		borderRadius: 15,
+		marginTop: 10,
 	},
 	navBtnText: {
 		marginStart: 5,
@@ -242,6 +245,7 @@ const darkStyles = StyleSheet.create({
 		padding: 2,
 		marginEnd: 10,
 		borderRadius: 15,
+		marginTop: 10,
 	},
 	text: {
 		color: '#fafafa',

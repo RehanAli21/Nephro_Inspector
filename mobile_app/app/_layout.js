@@ -25,6 +25,14 @@ const Layout = () => {
 				name='scan/scan'
 				options={{ headerShown: false }}
 			/>
+			<Stack.Screen
+				name='records/records'
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name='records/recordItem'
+				options={{ headerShown: false }}
+			/>
 		</Stack>
 	)
 }
