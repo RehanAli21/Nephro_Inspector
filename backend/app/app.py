@@ -171,4 +171,21 @@ def checkDataAvailability(username: str, db: db_dependency):
     except Exception as e:
         print(e)
     
-    
+
+class deleteRecordData(BaseModel):
+    username: str
+    imgname: str
+    recordname: str
+
+@app.post("/deleteDataForUser", status_code=status.HTTP_200_OK)
+def unSaveRecord(data: deleteRecordData, db: db_dependency):
+    try:
+        db.query(models.Record).filter(models.Record.username == data.username, models.Record.imgname == data.imgname, models.Record.recordname == data.recordname, models.Record.saved == True).update({"imgname": '', "recordname": '', "saved": False})
+
+        db.commit()
+
+        return {"deleted": "true"}
+    except Exception as e:
+        print(e)
+        return {"error": "An error occurred while deleting data."}
+

@@ -15,7 +15,7 @@ class Record(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(20), nullable=False)
     recordname = Column(String(50))
-    imgname = Column(String(20)) # name provided by user gor image
+    imgname = Column(String(100)) # name provided by user gor image
     imageurl = Column(String(150), nullable=False, unique=True)
     result = Column(String(100)) # this is for saving results
     saved = Column(Boolean) # this is for checking wheather this is available for user or not
