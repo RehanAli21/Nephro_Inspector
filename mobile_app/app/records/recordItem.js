@@ -23,8 +23,6 @@ const RecordItem = () => {
 		for (let e of newData) {
 			e.labelTextStyle = { color: labelColor }
 
-			console.log(e.label, e.value)
-
 			if (e.label == 'Stone') stone = e.value
 			if (e.label == 'Tumor') tumor = e.value
 			if (e.label == 'Cyst') cyst = e.value

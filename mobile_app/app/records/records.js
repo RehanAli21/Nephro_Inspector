@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as secureStore from 'expo-secure-store'
 import * as MediaLibrary from 'expo-media-library'
+import ScreenMsg from '../component/ScreenMsg'
 import axios from 'axios'
 const { url } = require('../config.json')
 
@@ -27,6 +28,7 @@ const Records = () => {
 	let colorScheme = useColorScheme()
 	const [data, setData] = useState([])
 	const [dataAvailable, setDataAvailable] = useState('')
+	const [showMsg, setShowMsg] = useState('')
 
 	useEffect(() => {
 		getDeviceData()
@@ -97,6 +99,67 @@ const Records = () => {
 		router.push({ pathname: '/records/recordItem', params: { favour, data: JSON.stringify(data), name, imguri } })
 	}
 
+	const deleteRecord = async data => {
+		setShowMsg('Deleting Record, please wait')
+		try {
+			const username = await secureStore.getItemAsync('username')
+
+			const deleteRecord = {
+				username: username,
+				imgname: data['imageName'],
+				recordname: data['recordName'],
+			}
+
+			const album = await MediaLibrary.getAlbumAsync('nephro_app')
+
+			const assets = await (await MediaLibrary.getAssetsAsync({ album: album })).assets
+
+			for (let asset of assets) {
+				if (asset.uri == data['imageuri']) {
+					const res = await MediaLibrary.removeAssetsFromAlbumAsync(asset, album)
+				}
+			}
+
+			let recordData = await AsyncStorage.getItem('nephro_data')
+
+			if (recordData != null) {
+				let newData = []
+
+				recordData = JSON.parse(recordData)
+
+				if (recordData.length > 0) {
+					for (let record of recordData) {
+						if (
+							record.username == deleteRecord.username &&
+							record.imageName == deleteRecord.imgname &&
+							record.recordName == deleteRecord.recordname
+						) {
+							console.log('found, and deleted')
+						} else {
+							newData.push(record)
+						}
+					}
+				}
+
+				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
+			}
+
+			const res = await axios.post(`${url}/deleteDataForUser`, deleteRecord)
+
+			if (res.status == 200 && res.data['deleted']) {
+				alert('Record Deleted.')
+			} else {
+				alert('An error occurred while deleting record.')
+			}
+
+			setShowMsg('')
+		} catch (err) {
+			console.log(err)
+			alert('An error occurred while deleting record.')
+			setShowMsg('')
+		}
+	}
+
 	return (
 		<SafeAreaView style={[styles.container, colorScheme == 'dark' ? darkStyle.container : lightStyle.container]}>
 			<View style={[styles.nav, colorScheme == 'dark' ? darkStyle.border : lightStyle.border]}>
@@ -140,7 +203,7 @@ const Records = () => {
 									</Pressable>
 									<Pressable
 										style={[styles.cardFooterbtn2]}
-										onPress={() => alert('delete Record')}>
+										onPress={() => deleteRecord(e)}>
 										<FontAwesome5
 											name='trash'
 											size={22}
@@ -180,6 +243,7 @@ const Records = () => {
 					</Text>
 				</View>
 			) : null}
+			{showMsg != '' ? <ScreenMsg msg={showMsg} /> : null}
 		</SafeAreaView>
 	)
 }

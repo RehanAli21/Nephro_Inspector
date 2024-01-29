@@ -17,7 +17,7 @@ const wCameraIcon = require('../../assets/icons/wcameraicon.png')
 const wImageIcon = require('../../assets/icons/wimageicon.png')
 
 const { width, height } = Dimensions.get('window')
-let tempImageNameFromAsset = ''
+let imageNameFromAsset = ''
 export default function Page() {
 	let colorScheme = useColorScheme()
 	let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
@@ -34,7 +34,6 @@ export default function Page() {
 	const [username, setUsername] = useState('')
 	const [imagePathFromScanAPI, setImagePathFromScanAPI] = useState('')
 	const [recordName, setRecordName] = useState('')
-	const [imageNameFromAsset, setImageNameFromAsset] = useState('')
 
 	const [permissionResponse, requestPermission] = MediaLibrary.usePermissions()
 
@@ -172,8 +171,7 @@ export default function Page() {
 				await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
 			}
 
-			tempImageNameFromAsset = asset.filename
-			await setImageNameFromAsset(asset.filename)
+			imageNameFromAsset = asset.filename
 
 			const imageName = asset.filename
 			const recordNameAPIPARAM = recordName == '' ? 'unknown' : recordName
@@ -205,7 +203,7 @@ export default function Page() {
 	const saveRecordData = async keyData => {
 		let err = false
 
-		console.log('image name: ', imageNameFromAsset, tempImageNameFromAsset)
+		console.log('image name: ', imageNameFromAsset)
 
 		let rName = recordName == '' ? 'unknown' : recordName
 		const d = {
@@ -213,7 +211,7 @@ export default function Page() {
 			username: username,
 			result: data,
 			favour: result == 'normal' ? 'normal' : 'notnormal',
-			imageName: imageNameFromAsset == '' ? tempImageNameFromAsset : imageNameFromAsset,
+			imageName: imageNameFromAsset,
 		}
 
 		if (keyData == null) {
@@ -241,7 +239,7 @@ export default function Page() {
 		if (err) alert('Something went wrong on saving')
 		else alert('Record has been saved.')
 
-		tempImageNameFromAsset = ''
+		imageNameFromAsset = ''
 	}
 
 	return (
