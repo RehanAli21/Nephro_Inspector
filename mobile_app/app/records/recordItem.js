@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams, usePathname, useGlobalSearchParams } from 'expo-router'
 import { View, Text, Pressable, SafeAreaView, StyleSheet, useColorScheme, Dimensions, Image } from 'react-native'
-import { AntDesign, FontAwesome5 } from '@expo/vector-icons'
+import { AntDesign } from '@expo/vector-icons'
 import { BarChart } from 'react-native-gifted-charts'
 import { useEffect, useState } from 'react'
 
@@ -12,29 +12,52 @@ const RecordItem = () => {
 
 	const [chartData, setChartData] = useState([])
 	const [result, setResult] = useState('')
+	const [recorName, setRecordName] = useState()
+	const [imageuri, setImageuri] = useState()
 
 	useEffect(() => {
-		let newData = JSON.parse(data)
+		try {
+			let left = /leftParanthesisSign/g
+			let right = /rightParanthesisSign/g
 
-		let stone = 0
-		let tumor = 0
-		let cyst = 0
+			let properName = name
 
-		for (let e of newData) {
-			e.labelTextStyle = { color: labelColor }
+			if (left.test(properName)) properName = properName.replace(left, '(')
+			if (right.test(properName)) properName = properName.replace(right, ')')
 
-			if (e.label == 'Stone') stone = e.value
-			if (e.label == 'Tumor') tumor = e.value
-			if (e.label == 'Cyst') cyst = e.value
-		}
-		setChartData(newData)
+			setRecordName(properName)
 
-		if (favour == 'normal') {
-			setResult('normal')
-		} else if (favour == 'notnormal') {
-			if (stone > tumor && stone > cyst) setResult('Stone')
-			else if (cyst > tumor && cyst > stone) setResult('Cyst')
-			else if (tumor > cyst && tumor > stone) setResult('Tumor')
+			let properuri = imguri
+
+			if (left.test(properuri)) properuri = properuri.replace(left, '(')
+			if (right.test(properuri)) properuri = properuri.replace(right, ')')
+
+			setImageuri(properuri)
+
+			let newData = JSON.parse(data)
+
+			let stone = 0
+			let tumor = 0
+			let cyst = 0
+
+			for (let e of newData) {
+				e.labelTextStyle = { color: labelColor }
+
+				if (e.label == 'Stone') stone = e.value
+				if (e.label == 'Tumor') tumor = e.value
+				if (e.label == 'Cyst') cyst = e.value
+			}
+			setChartData(newData)
+
+			if (favour == 'normal') {
+				setResult('normal')
+			} else if (favour == 'notnormal') {
+				if (stone > tumor && stone > cyst) setResult('Stone')
+				else if (cyst > tumor && cyst > stone) setResult('Cyst')
+				else if (tumor > cyst && tumor > stone) setResult('Tumor')
+			}
+		} catch (err) {
+			console.log(err)
 		}
 	}, [colorScheme])
 
@@ -48,11 +71,11 @@ const RecordItem = () => {
 						color={colorScheme === 'dark' ? '#fafafa' : '#242424'}
 					/>
 				</Pressable>
-				<Text style={[styles.navText, colorScheme === 'dark' ? darkStyle.h1 : lightStyle.h1]}>{name}</Text>
+				<Text style={[styles.navText, colorScheme === 'dark' ? darkStyle.h1 : lightStyle.h1]}>{recorName}</Text>
 			</View>
 			<Image
 				resizeMode='stretch'
-				source={{ uri: `${imguri}` }}
+				source={{ uri: `${imageuri}` }}
 				style={[styles.image]}
 			/>
 			<View style={[{ marginTop: 20, marginBottom: height * 0.03, marginStart: -30 }]}>

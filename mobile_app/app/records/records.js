@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as secureStore from 'expo-secure-store'
 import * as MediaLibrary from 'expo-media-library'
+import * as FileSystem from 'expo-file-system'
 import ScreenMsg from '../component/ScreenMsg'
 import axios from 'axios'
 const { url } = require('../config.json')
@@ -29,10 +30,11 @@ const Records = () => {
 	const [data, setData] = useState([])
 	const [dataAvailable, setDataAvailable] = useState('')
 	const [showMsg, setShowMsg] = useState('')
+	const [reload, setReload] = useState(true)
 
 	useEffect(() => {
 		getDeviceData()
-	}, [])
+	}, [reload])
 
 	const getDeviceData = async () => {
 		console.log('getting data')
@@ -45,8 +47,6 @@ const Records = () => {
 				let compData = []
 
 				recordData = JSON.parse(recordData)
-
-				console.log(recordData.length)
 
 				if (recordData.length > 0) {
 					for (const record of recordData) {
@@ -79,6 +79,7 @@ const Records = () => {
 			}
 		} catch (err) {
 			console.log(err)
+			setDataAvailable('noData')
 		}
 	}
 
@@ -92,11 +93,19 @@ const Records = () => {
 			}
 		} catch (err) {
 			console.log(err)
+			setDataAvailable('noData')
 		}
 	}
 
 	const goToRecordItemPage = (favour, data, name, imguri) => {
-		router.push({ pathname: '/records/recordItem', params: { favour, data: JSON.stringify(data), name, imguri } })
+		let leftParanthesis = /\(/g
+		let rightParanthesis = /\)/g
+		name = name.replace(leftParanthesis, 'leftParanthesisSign')
+		name = name.replace(rightParanthesis, 'rightParanthesisSign')
+		imguri = imguri.replace(leftParanthesis, 'leftParanthesisSign')
+		imguri = imguri.replace(rightParanthesis, 'rightParanthesisSign')
+
+		router.push({ pathname: '/records/recordItem', params: { favour: favour, data: JSON.stringify(data), name: name, imguri: imguri } })
 	}
 
 	const deleteRecord = async data => {
@@ -116,7 +125,7 @@ const Records = () => {
 
 			for (let asset of assets) {
 				if (asset.uri == data['imageuri']) {
-					const res = await MediaLibrary.removeAssetsFromAlbumAsync(asset, album)
+					await MediaLibrary.removeAssetsFromAlbumAsync(asset, album)
 				}
 			}
 
@@ -158,6 +167,104 @@ const Records = () => {
 			alert('An error occurred while deleting record.')
 			setShowMsg('')
 		}
+
+		setReload(!reload)
+	}
+
+	const downloadData = async () => {
+		setShowMsg('Downloading Data')
+		try {
+			const username = await secureStore.getItemAsync('username')
+
+			const res = await axios.get(`${url}/downloadData/${username}`)
+
+			const newData = []
+			let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
+			const imagesToDownload = []
+
+			if (res.data) {
+				for (let record of res.data) {
+					resultData = [
+						{ value: JSON.parse(record.result).normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+						{ value: JSON.parse(record.result).stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+						{ value: JSON.parse(record.result).cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+						{ value: JSON.parse(record.result).tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+					]
+
+					newData.push({
+						recordName: record.recordName,
+						username: record.username,
+						result: resultData,
+						favour: JSON.parse(record.result).favour == 'not Normal' ? 'notnormal' : 'normal',
+						imageName: record.imageName,
+					})
+
+					imagesToDownload.push({ imageName: record.imageName, recordName: record.recordName, username: record.username })
+				}
+
+				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
+
+				if (imagesToDownload.length > 0) downloadImages(imagesToDownload)
+				else setShowMsg('')
+			}
+		} catch (err) {
+			console.log(err)
+			setShowMsg('')
+			alert('Error occured during downloading')
+		}
+	}
+
+	const downloadImages = async imagesInfo => {
+		setShowMsg('Download Images')
+		try {
+			for (let i = 0; i < imagesInfo.length; i++) {
+				setShowMsg(`Download Images No: ${i + 1}`)
+
+				const { imageName, username, recordName } = imagesInfo[i]
+
+				const fileRes = await FileSystem.downloadAsync(
+					`${url}/downloadImage/?username=${username}&imageName=${imageName}&recordName=${recordName}`,
+					FileSystem.documentDirectory + imageName
+				)
+
+				const asset = await MediaLibrary.createAssetAsync(fileRes.uri)
+
+				const album = await MediaLibrary.getAlbumAsync('nephro_app')
+
+				if (album == null) {
+					await MediaLibrary.createAlbumAsync('nephro_app', asset, true)
+				} else {
+					await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
+				}
+
+				await axios.get(
+					`${url}/changeImageName/?username=${username}&recordName=${recordName}&oldImageName=${imageName}&newImageName=${asset.filename}`
+				)
+
+				let recordData = await AsyncStorage.getItem('nephro_data')
+
+				if (recordData != null) {
+					recordData = JSON.parse(recordData)
+
+					if (recordData.length > 0) {
+						for (const record of recordData) {
+							if (record.imageName == imageName) {
+								record.imageName = asset.filename
+							}
+						}
+					}
+
+					await AsyncStorage.setItem('nephro_data', JSON.stringify(recordData))
+				}
+			}
+
+			setShowMsg('')
+		} catch (err) {
+			console.log(err)
+			setShowMsg('')
+		}
+
+		setReload(!reload)
 	}
 
 	return (
@@ -232,7 +339,7 @@ const Records = () => {
 					<Text style={[styles.dataText, colorScheme == 'dark' ? darkStyle.h1 : lightStyle.h1]}>Do you want to download?</Text>
 					<Pressable
 						style={[styles.dataBtn, colorScheme == 'dark' ? darkStyle.border : lightStyle.border]}
-						onPress={() => alert('dwonload data')}>
+						onPress={downloadData}>
 						<Text style={[styles.databtntext, colorScheme == 'dark' ? darkStyle.h1 : lightStyle.h1]}>Download</Text>
 					</Pressable>
 				</View>
