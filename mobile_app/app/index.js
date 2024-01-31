@@ -58,12 +58,17 @@ export default function Login() {
 			<View style={[styles.secondary]}>
 				<TextInput
 					placeholder='Username'
+					autoCapitalize='none'
+					autoComplete='off'
+					autoCorrect={false}
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 					onChangeText={text => setUsername(text)}
 				/>
 				<TextInput
 					secureTextEntry={true}
+					autoCapitalize='none'
+					autoComplete='off'
 					autoCorrect={false}
 					placeholder='Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}

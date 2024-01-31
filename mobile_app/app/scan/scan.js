@@ -150,9 +150,17 @@ export default function Page() {
 	}
 
 	const CheckBeforeSaveResult = () => {
-		if (recordName == '')
+		if (recordName == '') {
 			Alert.alert('Confirmation', 'Do you want save record without name?', [{ text: 'Yes', onPress: saveResult }, { text: 'No' }])
-		else saveResult()
+		} else {
+			let RegExp = /^[a-zA-Z0-9 ]+$/
+
+			if (RegExp.test(recordName)) {
+				saveResult()
+			} else {
+				Alert.alert('Warning', 'Only alphabets, numbers and spaces are allowed in Record Name.', [{ text: 'OK' }])
+			}
+		}
 	}
 
 	const saveResult = async () => {
@@ -339,6 +347,9 @@ export default function Page() {
 								]}></View>
 							<TextInput
 								onChangeText={text => setRecordName(text)}
+								autoCapitalize='none'
+								autoComplete='off'
+								autoCorrect={false}
 								style={[styles.loadInput, colorScheme === 'dark' ? darkStyles.loadInput : lightStyles.loadInput]}
 								placeholder='Save Record by Name'
 								placeholderTextColor={colorScheme === 'dark' ? '#aaaaaa' : '#242424'}

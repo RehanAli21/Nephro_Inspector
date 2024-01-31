@@ -67,12 +67,17 @@ export default function Signup() {
 				<TextInput
 					onChangeText={text => setUsername(text)}
 					placeholder='Enter Username'
+					autoCapitalize='none'
+					autoComplete='off'
+					autoCorrect={false}
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 				<TextInput
 					onChangeText={text => setPwd(text)}
 					secureTextEntry={true}
+					autoCapitalize='none'
+					autoComplete='off'
 					autoCorrect={false}
 					placeholder='Enter Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
@@ -81,6 +86,8 @@ export default function Signup() {
 				<TextInput
 					onChangeText={text => setConfirmPwd(text)}
 					secureTextEntry={true}
+					autoCapitalize='none'
+					autoComplete='off'
 					autoCorrect={false}
 					placeholder='Confirm Password'
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
@@ -89,6 +96,9 @@ export default function Signup() {
 				<TextInput
 					onChangeText={text => setSecret(text)}
 					placeholder='Text to recover password'
+					autoCapitalize='none'
+					autoComplete='off'
+					autoCorrect={false}
 					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
