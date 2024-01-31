@@ -1,16 +1,17 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from . import AIFunctions
-from pydantic import BaseModel
-from typing import Annotated
 from . import models
 from .database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from pydantic import BaseModel
+from typing import Annotated
 from passlib.context import CryptContext
 from PIL import Image
 from datetime import datetime
-import json
+import os, json
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
@@ -189,3 +190,64 @@ def unSaveRecord(data: deleteRecordData, db: db_dependency):
         print(e)
         return {"error": "An error occurred while deleting data."}
 
+
+@app.get("/downloadData/{username}", status_code=status.HTTP_200_OK)
+def downloadData(username: str, db: db_dependency):
+    try:
+        user = db.query(models.User).filter(models.User.username == username).first()
+
+        if user is None:
+            return {"Msg": "Username is incorrect"}
+        
+        records = db.query(models.Record).filter(models.Record.username == username, models.Record.saved == True)
+
+        if records is None:
+            return {"Msg": "No Records are available"}
+        
+        newData = []
+
+        for record in records:
+            newData.append({
+                "recordName": record.recordname,
+                "username": username,
+			    "result": record.result,
+			    "imageName": record.imgname,
+            })
+
+        return newData
+    except Exception as e:
+        print(e)
+        return {"error": "An error occurred"}
+    
+
+@app.get("/downloadImage",status_code=status.HTTP_200_OK)
+def downloadImage(username: str, imageName: str, recordName: str, db: db_dependency):
+    print(username, imageName, recordName)
+    try:
+        record = db.query(models.Record).filter(models.Record.username == username, models.Record.imgname == imageName, models.Record.recordname == recordName).first()
+
+        if record is None:
+            return {"details": "No Image Found"}
+        
+        image_path = record.imageurl
+
+        
+        if not os.path.exists(image_path):
+            raise HTTPException(status_code=404, detail="Image not found")
+
+        return FileResponse(image_path)
+
+    except Exception as e:
+        print(e)
+        return {"details": "An error occurred."}
+    
+@app.get("/changeImageName",status_code=status.HTTP_200_OK)
+def changeImageName(username: str, recordName: str, oldImageName: str, newImageName: str, db: db_dependency):
+    try:
+        db.query(models.Record).filter(models.Record.username == username, models.Record.imgname == oldImageName, models.Record.recordname == recordName).update({"imgname": newImageName})
+        db.commit()
+
+        return {"details": "Image Name Updated"}
+    except Exception as e:
+        print(e)
+        return {"details": "Error occured while changing Image Name."}
