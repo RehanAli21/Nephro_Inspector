@@ -9,48 +9,63 @@ const wsignout = require('../../assets/icons/whiteSignout.png')
 const bsignout = require('../../assets/icons/blackSignout.png')
 import * as secureStore from 'expo-secure-store'
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
 export default function Main() {
-	const colorScheme = useColorScheme()
-	const navigation = useNavigation()
+	const colorScheme = useColorScheme() // get system theme mode i.e. dark, light
+	const navigation = useNavigation() // hook to control navigation
 
-	const [username, setUsername] = useState('')
-	const [goBack, setGoBack] = useState(false)
+	const [username, setUsername] = useState('') // variable for username
+	const [goBack, setGoBack] = useState(false) // variable to track to go back or not
 
 	useEffect(() => {
+		// this helps in presenting user from going back
 		navigation.addListener('beforeRemove', e => {
+			// if goback is false then user can not go back
+			// this prevent user to go to login page without signout
 			if (goBack == false) {
 				e.preventDefault()
 				console.log('onback')
 			}
-
+			// if goback is true then user can go back
+			// this helps in signout, so that user can go back to login
 			if (goBack == true) {
 				navigation.dispatch(e.data.action)
 			}
 		})
 
-		checkForLoginData()
+		checkForLoginData() // checking user
 	}, [goBack, navigation])
 
+	// function for checking if already loggedIn by
+	// checking if login data is already present
 	async function checkForLoginData() {
+		// getting login data
 		const isloggedIn = await secureStore.getItemAsync('loggedIn')
+		// if loggedIn is not yes, then go to login page
 		if (isloggedIn != 'yes') {
 			setGoBack(true)
 			router.replace('/')
 			return
 		}
 
+		// getting username
 		const usernameValue = await secureStore.getItemAsync('username')
-
+		// setting username value
 		setUsername(usernameValue)
 	}
 
+	// function for signout
 	const logout = async () => {
+		// enabling go to back functinality
 		setGoBack(true)
 
+		// deleting login data information
 		await secureStore.deleteItemAsync('loggedIn')
 		await secureStore.deleteItemAsync('username')
 
+		// going to login screen
 		router.replace('/')
 		return
 	}
@@ -112,7 +127,7 @@ export default function Main() {
 		</SafeAreaView>
 	)
 }
-
+// styles for light mode.
 const lightStyles = StyleSheet.create({
 	container: {
 		display: 'flex',
@@ -204,7 +219,7 @@ const lightStyles = StyleSheet.create({
 		marginTop: 10,
 	},
 })
-
+// styles for dark mode.
 const darkStyles = StyleSheet.create({
 	container: {
 		display: 'flex',

@@ -4,42 +4,58 @@ import { AntDesign } from '@expo/vector-icons'
 import { BarChart } from 'react-native-gifted-charts'
 import { useEffect, useState } from 'react'
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
 const RecordItem = () => {
-	let colorScheme = useColorScheme()
-	let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
-	const { favour, data, name, imguri } = useLocalSearchParams()
+	let colorScheme = useColorScheme() // get system theme mode i.e. dark, light
+	let labelColor = colorScheme == 'dark' ? 'white' : '#242424' // lable Color for graph based on theme mode
+	const { favour, data, name, imguri } = useLocalSearchParams() // getting params passed by records component
 
-	const [chartData, setChartData] = useState([])
-	const [result, setResult] = useState('')
-	const [recorName, setRecordName] = useState()
-	const [imageuri, setImageuri] = useState()
+	const [chartData, setChartData] = useState([]) // variable for graph data
+	const [result, setResult] = useState('') // variable for kidney result
+	const [recorName, setRecordName] = useState() // variable for recordName
+	const [imageuri, setImageuri] = useState() // variable for image path/uri
 
 	useEffect(() => {
 		try {
+			////////////////////////////////////
+			// section for changing
+			// 'leftParanthesisSign' to '('
+			// 'rightParanthesisSign' to ')
+			// in name and image name.
 			let left = /leftParanthesisSign/g
 			let right = /rightParanthesisSign/g
-
+			// getting name from params
 			let properName = name
-
+			// if 'leftParanthesisSign' present then replace it with '(' in name
 			if (left.test(properName)) properName = properName.replace(left, '(')
+			// if 'rightParanthesisSign' present then replace it with ')' in name
 			if (right.test(properName)) properName = properName.replace(right, ')')
-
+			// setting name after fixing
 			setRecordName(properName)
 
+			// getting imguri from params
 			let properuri = imguri
-
+			// if 'leftParanthesisSign' present then replace it with '(' in imguri
 			if (left.test(properuri)) properuri = properuri.replace(left, '(')
+			// if 'rightParanthesisSign' present then replace it with ')' in imguri
 			if (right.test(properuri)) properuri = properuri.replace(right, ')')
-
+			// setting imguri after fixing
 			setImageuri(properuri)
+			//////////////////////////////////////
 
-			let newData = JSON.parse(data)
+			/////////////////////////////////////
+			// code for changing label color for graph and
+			// determine the result
+			////////////////////////////////////
+			let newData = JSON.parse(data) // convert data from str to object format
 
-			let stone = 0
-			let tumor = 0
-			let cyst = 0
+			let stone = 0 // variable for stone disease
+			let tumor = 0 // variable for tumor disease
+			let cyst = 0 // variable for cyst disease
 
+			// iterating to change labelColor and get diseases value
 			for (let e of newData) {
 				e.labelTextStyle = { color: labelColor }
 
@@ -47,8 +63,11 @@ const RecordItem = () => {
 				if (e.label == 'Tumor') tumor = e.value
 				if (e.label == 'Cyst') cyst = e.value
 			}
+			// setting graph data after changing labelColor
 			setChartData(newData)
 
+			////////////////////////////////////////
+			// now setting result based on favour and disease values
 			if (favour == 'normal') {
 				setResult('normal')
 			} else if (favour == 'notnormal') {
@@ -96,6 +115,7 @@ const RecordItem = () => {
 	)
 }
 
+// general styles
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
@@ -130,7 +150,7 @@ const styles = StyleSheet.create({
 		marginVertical: 15,
 	},
 })
-
+// specific styles for dark mode
 const darkStyle = StyleSheet.create({
 	container: {
 		backgroundColor: '#242424',
@@ -142,7 +162,7 @@ const darkStyle = StyleSheet.create({
 		color: '#fafafa',
 	},
 })
-
+// specific styles for light mode
 const lightStyle = StyleSheet.create({
 	container: {
 		backgroundColor: '#fafafa',

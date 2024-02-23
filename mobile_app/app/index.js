@@ -6,48 +6,71 @@ const { url } = require('./config.json')
 import ScreenMsg from './component/ScreenMsg'
 import * as secureStore from 'expo-secure-store'
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
 export default function Login() {
-	const colorScheme = useColorScheme()
+	const colorScheme = useColorScheme() // get system theme mode i.e. dark, light
 
-	const [username, setUsername] = useState('')
-	const [password, setPassword] = useState('')
-	const [error, setError] = useState('')
-	const [showMsg, setShowMsg] = useState('')
+	const [username, setUsername] = useState('') // variable for username
+	const [password, setPassword] = useState('') // variable for password
+	const [error, setError] = useState('') // variable for error, it shows errors
+	const [showMsg, setShowMsg] = useState('') // variable for Msg on ScreenMsg comp
 
+	useEffect(() => {
+		// calling function on component initialize
+		checkForLoginData()
+	}, [])
+
+	// function for checking if already loggedIn by
+	// checking if login data is already present
 	async function checkForLoginData() {
+		// getting login data
 		const isloggedIn = await secureStore.getItemAsync('loggedIn')
+		// if loggedIn
 		if (isloggedIn == 'yes') {
+			// checking if username exists
 			const usernameValue = await secureStore.getItemAsync('username')
 			if (usernameValue) {
+				// got to the main menu screen
 				router.replace('/main/main')
 			}
 		}
 	}
 
-	checkForLoginData()
-
+	// function for login for user
 	const loginFunc = async () => {
+		// closes keyboard
 		Keyboard.dismiss()
+
+		// checking if username and password is not empty
 		if (username == '' && password == '') return alert('Fill All Fields')
 
 		try {
+			// setting msg to tell user to wait
 			setShowMsg('Please Wait, Signing In.')
+			// api call to user auth
 			const res = await axios.post(`${url}/users/getUser`, { username, password })
-
+			// removing msg
 			setShowMsg('')
-
+			// if password is wrong, show password error
 			if (res.data['passwordWrong'] == true) return setError('Password is incorrect')
-
+			// if user is not found, show username is incorrect
 			if (res.data['userFound'] == false) return setError('Username is incorrect')
 
+			// setting data for remenber login, and user does not have to login everytime.
+			// setting username and loggin data in device
 			await secureStore.setItemAsync('username', username)
 			await secureStore.setItemAsync('loggedIn', 'yes')
 
+			// go to the main menu screen
 			router.replace('/main/main')
 		} catch (err) {
+			// show error for debugging
 			console.log(err)
+			// remove msg
 			setShowMsg('')
+			// telling user that error occurred
 			alert('Error occured, Please try agan.')
 		}
 	}
@@ -97,6 +120,7 @@ export default function Login() {
 	)
 }
 
+// general styles
 const styles = StyleSheet.create({
 	container: {
 		alignItems: 'center',
@@ -158,6 +182,7 @@ const styles = StyleSheet.create({
 	},
 })
 
+// specific styles for light mode
 const lightStyle = StyleSheet.create({
 	text: {
 		color: '#242424',
@@ -178,6 +203,7 @@ const lightStyle = StyleSheet.create({
 	},
 })
 
+// specific styles for dark mode
 const darkStyle = StyleSheet.create({
 	text: {
 		color: '#fafafa',

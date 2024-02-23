@@ -16,11 +16,14 @@ const bImageIcon = require('../../assets/icons/bimageicon.png')
 const wCameraIcon = require('../../assets/icons/wcameraicon.png')
 const wImageIcon = require('../../assets/icons/wimageicon.png')
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
-let imageNameFromAsset = ''
+let imageNameFromAsset = '' // vairable for storing image name
 export default function Page() {
-	let colorScheme = useColorScheme()
-	let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
+	let colorScheme = useColorScheme() // get system theme mode i.e. dark, light
+	let labelColor = colorScheme == 'dark' ? 'white' : '#242424' // lable Color for graph based on theme mode
+	// variable for graph data
 	const [data, setData] = useState([
 		{ value: 0, label: 'onr', frontColor: 'green', labelTextStyle: { color: labelColor } },
 		{ value: 0, label: 'two', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
@@ -28,89 +31,109 @@ export default function Page() {
 		{ value: 0, label: 'four', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 	])
 
-	const [image, setImage] = useState(null)
-	const [loading, setLoading] = useState(false)
-	const [result, setResult] = useState('')
-	const [username, setUsername] = useState('')
+	const [image, setImage] = useState(null) // variable for image
+	const [loading, setLoading] = useState(false) // variable for loading state
+	const [result, setResult] = useState('') // variable for result
+	const [username, setUsername] = useState('') // variable for username
+	// to get image path from API, it helps in record in database
 	const [imagePathFromScanAPI, setImagePathFromScanAPI] = useState('')
-	const [recordName, setRecordName] = useState('')
+	const [recordName, setRecordName] = useState('') // variable for record Name
 
+	// hook to get permission to access media library of device
 	const [permissionResponse, requestPermission] = MediaLibrary.usePermissions()
 
+	// getting username on compoent initial start
 	useEffect(() => {
 		getUsername()
 	}, [])
 
+	//function to get username from device
 	const getUsername = async () => {
 		const res = await secureStore.getItemAsync('username')
 		if (res) setUsername(res)
 	}
 
+	// function to get and select image from device gallery
 	const selectImage = async () => {
+		// requesting gallery access
 		const request = await ImagePicker.requestMediaLibraryPermissionsAsync()
-
+		// if access is granted
 		if (request.granted) {
 			try {
+				// getting image after selecting and editing
 				const result = await ImagePicker.launchImageLibraryAsync({
 					mediaTypes: ImagePicker.MediaTypeOptions.Images,
 					allowsEditing: true,
 				})
 
+				// if image is not canceled
 				if (!result.canceled) {
 					// Resize the selected image to 250x250
 					const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
 						format: 'jpeg',
 						compress: 1,
 					})
-
+					// setting image
 					setImage(resizedImage)
 				}
 			} catch (err) {
 				console.log(err)
 			}
 		} else {
+			// if access to gallery is not granted
 			alert('Cannot Access Images')
 		}
 	}
 
+	// function to capture image from device camera
 	const useCamera = async () => {
+		// requesting camera access
 		const request = await ImagePicker.requestCameraPermissionsAsync()
-
+		// if access is granted
 		if (request.granted) {
 			try {
+				// getting image after capturing and editing
 				const result = await ImagePicker.launchCameraAsync({
 					mediaTypes: ImagePicker.MediaTypeOptions.Images,
 					allowsEditing: true,
 				})
 
+				// if image is not canceled
 				if (!result.canceled) {
 					// Resize the selected image to 250x250
 					const resizedImage = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 250, height: 250 } }], {
 						format: 'jpeg',
 						compress: 1,
 					})
-
+					// setting image
 					setImage(resizedImage)
 				}
 			} catch (err) {
 				console.log(err)
 			}
 		} else {
+			// if access to camera is not granted
 			alert('Cannot Access Camera')
 		}
 	}
 
+	// function to upload image to server for scanning
 	const uploadimage = async () => {
+		// setting loading to true, to tell user to wait for scanning
 		await setLoading(true)
 		try {
+			// uploading image to the API and getting response from API
 			const res = await FileSystem.uploadAsync(`${url}/checkImage/${username}`, image.uri, {
 				httpMethod: 'POST',
 				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
 				fieldName: 'image',
 			})
 
+			// getting message from API response
 			const message = JSON.parse(res.body).message
+			// checking if message has favour key
 			if (message.favour) {
+				// setting data for graph
 				setData([
 					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
 					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
@@ -118,6 +141,8 @@ export default function Page() {
 					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 				])
 
+				////////////////////////////////////
+				// code for setting result based on favour and disease value
 				if (message.favour == 'normal') {
 					setResult('normal')
 				} else if (message.favour == 'not Normal') {
@@ -127,10 +152,12 @@ export default function Page() {
 				}
 			}
 
+			// getting imagePath from API response
 			const { imagePath } = JSON.parse(res.body)
-
+			// setting imagepath
 			setImagePathFromScanAPI(imagePath)
 		} catch (err) {
+			// handling error and showing message on error
 			console.log(err)
 
 			alert('Something Went wrong!! Try Again')
@@ -138,6 +165,7 @@ export default function Page() {
 		}
 	}
 
+	// function to reset garph, result and loading.
 	const resetResults = () => {
 		setLoading(false)
 		setResult('')
@@ -149,71 +177,98 @@ export default function Page() {
 		])
 	}
 
+	// funtion to check and confirm record name.
+	// this is like double check on record name.
 	const CheckBeforeSaveResult = () => {
+		// if record name is empty then asking user if they does not have to name record.
 		if (recordName == '') {
 			Alert.alert('Confirmation', 'Do you want save record without name?', [{ text: 'Yes', onPress: saveResult }, { text: 'No' }])
 		} else {
-			let RegExp = /^[a-zA-Z0-9 ]+$/
+			// if record name is not empty, then checking
+			// that record name has only alphabets, numbers and space in it.
 
+			let RegExp = /^[a-zA-Z0-9 ]+$/
+			// if record name has only alphabets, numbers and space in it, then save result/
 			if (RegExp.test(recordName)) {
 				saveResult()
 			} else {
+				// if record name is not correct, warn user
 				Alert.alert('Warning', 'Only alphabets, numbers and spaces are allowed in Record Name.', [{ text: 'OK' }])
 			}
 		}
 	}
 
+	// function to save record in device and API call to save data on the server
 	const saveResult = async () => {
+		// if media library permission is not granted, warn user
 		if (permissionResponse.granted != true) alert('Please give permission to access media')
-
+		// check permission from user
 		await requestPermission()
-
+		// if permission not grapnted from user the don't save
 		if (permissionResponse.granted != true) return alert('Permission denied to access media')
 
 		try {
+			// create asset from image uri (asset means files accessible from media library)
 			const asset = await MediaLibrary.createAssetAsync(image.uri)
+			// getting album 'mephro_app', this album has images of saved records
 			const album = await MediaLibrary.getAlbumAsync('nephro_app')
+
 			if (album == null) {
+				// if album is not present, then create album and add the image
 				await MediaLibrary.createAlbumAsync('nephro_app', asset, true)
 			} else {
+				// if album is present, then only add asset in the album
 				await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
 			}
-
+			// image name from asset, this will be used in saving record data on device
 			imageNameFromAsset = asset.filename
-
+			// image name
 			const imageName = asset.filename
+			// record name
 			const recordNameAPIPARAM = recordName == '' ? 'unknown' : recordName
 
+			// save record on the server
 			await axios.get(
 				`${url}/saveImage/?imagePath=${imagePathFromScanAPI}&username=${username}&name=${imageName}&recordName=${recordNameAPIPARAM}`
 			)
 
+			// getting records saved on the device
 			const recordData = await AsyncStorage.getItem('nephro_data')
 
+			// if records are present
 			if (recordData !== null) {
+				// then add record in that data
 				saveRecordData(recordData)
 			} else {
+				// if records is not present, then save newly create record
 				saveRecordData(null)
 			}
 		} catch (err) {
 			console.log(err)
 
+			// if error is of recordData (means 'nephro_data' is not present)
 			if (err instanceof ReferenceError) {
+				// then save newly create record
 				saveRecordData(null)
+			} else {
+				alert('Something Went wrong!! Try Again')
 			}
-
-			alert('Something Went wrong!! Try Again')
 		}
 
+		// reseting all data of scan
 		resetResults()
 	}
 
-	const saveRecordData = async keyData => {
-		let err = false
+	// function to save record on the device
+	// this function runs after image is saved
+	const saveRecordData = async records => {
+		let err = false // variable for error state
 
 		console.log('image name: ', imageNameFromAsset)
-
+		// record Name
 		let rName = recordName == '' ? 'unknown' : recordName
+		// new record data to save
+		// record has record name, username, results, favour and image name
 		const d = {
 			recordName: rName,
 			username: username,
@@ -222,31 +277,41 @@ export default function Page() {
 			imageName: imageNameFromAsset,
 		}
 
-		if (keyData == null) {
+		// if records is null (means there is not records)
+		if (records == null) {
+			// array with new record
 			let newData = [d]
 
 			try {
+				// create npehro_data and save new record in it in str form.
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
 			} catch (e) {
+				// handling error
 				console.log(e)
 				err = true
 			}
 		} else {
-			let newData = JSON.parse(keyData)
+			// if there are records.
 
+			// convert records from str to object
+			let newData = JSON.parse(records)
+
+			// adding new record in records
 			newData.push(d)
 
 			try {
+				// save data with new record added.
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
 			} catch (e) {
+				// handling error
 				console.log(e)
 				err = true
 			}
 		}
 
-		if (err) alert('Something went wrong on saving')
-		else alert('Record has been saved.')
-
+		if (err) alert('Something went wrong on saving') //if err, then warn user
+		else alert('Record has been saved.') // else tell user that record has been saved
+		// reseting image name
 		imageNameFromAsset = ''
 	}
 
@@ -382,6 +447,7 @@ export default function Page() {
 	)
 }
 
+// for general styling
 const styles = StyleSheet.create({
 	container: {
 		display: 'flex',
@@ -500,7 +566,7 @@ const styles = StyleSheet.create({
 		paddingEnd: 10,
 	},
 })
-
+// styles for light mode
 const lightStyles = StyleSheet.create({
 	container: {
 		backgroundColor: '#fafafa',
@@ -531,7 +597,7 @@ const lightStyles = StyleSheet.create({
 		color: '#242424',
 	},
 })
-
+// styles for dark mode
 const darkStyles = StyleSheet.create({
 	container: {
 		backgroundColor: '#242424',

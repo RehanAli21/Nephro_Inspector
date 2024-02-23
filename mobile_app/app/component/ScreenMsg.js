@@ -1,9 +1,13 @@
 import { View, Text, StyleSheet, ActivityIndicator, Dimensions, useColorScheme } from 'react-native'
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
 
+// component for show messages
+// this component cover whole screen to show message.
 const ScreenMsg = ({ msg }) => {
-	const colorScheme = useColorScheme()
+	const colorScheme = useColorScheme() // get system theme mode i.e. dark, light
 	return (
 		<View style={[styles.container, { backgroundColor: colorScheme == 'dark' ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.8)' }]}>
 			<View style={[styles.section]}>

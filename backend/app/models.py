@@ -1,6 +1,8 @@
+# this file is for decleare tables on database
 from sqlalchemy import Column, Integer, String, Boolean
 from .database import Base
 
+# users table model
 class User(Base):
     __tablename__ = "users"
 
@@ -9,6 +11,7 @@ class User(Base):
     password = Column(String(150), nullable=False)
     secret = Column(String(20), nullable=False)
 
+# records table model
 class Record(Base):
     __tablename__ = "records"
 

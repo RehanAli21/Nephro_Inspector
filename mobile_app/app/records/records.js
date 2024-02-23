@@ -23,33 +23,41 @@ import ScreenMsg from '../component/ScreenMsg'
 import axios from 'axios'
 const { url } = require('../config.json')
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
 const Records = () => {
-	let username = ''
-	let colorScheme = useColorScheme()
-	const [data, setData] = useState([])
-	const [dataAvailable, setDataAvailable] = useState('')
-	const [showMsg, setShowMsg] = useState('')
-	const [reload, setReload] = useState(true)
+	let username = '' // variable for username
+	let colorScheme = useColorScheme() // get system theme mode i.e. dark, light
+	const [data, setData] = useState([]) // varibale for storing records
+	const [dataAvailable, setDataAvailable] = useState('') // variable to tell if data is available on the server
+	const [showMsg, setShowMsg] = useState('') // to show message on ScreenMsg component
+	const [reload, setReload] = useState(true) // variable to trigger UI changes
 
+	// getting data from device on compo start and UI change trigger
 	useEffect(() => {
 		getDeviceData()
 	}, [reload])
 
+	// function to get records data from device
 	const getDeviceData = async () => {
 		console.log('getting data')
 		try {
+			// getting username from device
 			username = await secureStore.getItemAsync('username')
-
+			// getting records data from device
 			let recordData = await AsyncStorage.getItem('nephro_data')
-
+			// await AsyncStorage.removeItem('nephro_data')
+			// if records are availabel
 			if (recordData != null) {
-				let compData = []
-
+				let compData = [] // to store records data after modification
+				// convert records data from str to object
 				recordData = JSON.parse(recordData)
-
+				// checking if records length is greater then 0
 				if (recordData.length > 0) {
+					// iterating each record in records
 					for (const record of recordData) {
+						// added record in compData in specific format
 						compData.push({
 							recordName: record.recordName,
 							imageName: record.imageName,
@@ -57,86 +65,99 @@ const Records = () => {
 							favour: record.favour,
 						})
 					}
-
+					// getting 'nephro_app' album
 					const album = await MediaLibrary.getAlbumAsync('nephro_app')
-
+					// getting assets (images) from album
 					const assets = await MediaLibrary.getAssetsAsync({ album: album })
-
+					// iteraring asset in assets
 					for (let asset of assets.assets) {
+						// iterating each comp (data) from compData
 						for (let comp of compData) {
+							// if current asset name is same as any comp image name
 							if (asset.filename == comp.imageName) {
+								// then add image uri in comp
 								comp['imageuri'] = asset.uri
 							}
 						}
 					}
+					// setting data which shows records
 					setData(compData)
+					// setting data availability to present
 					setDataAvailable('present')
 				} else {
+					// records length is not greater then 0, then check from server
 					checkDataFromAPI()
 				}
 			} else {
+				// records is not present, then check from server
 				checkDataFromAPI()
 			}
 		} catch (err) {
+			// if there is a error, means there is no records data available
 			console.log(err)
 			setDataAvailable('noData')
 		}
 	}
 
+	// function to check if records data are available for download
 	const checkDataFromAPI = async () => {
 		try {
+			// API call to check data
 			const res = await axios.get(`${url}/checkData/${username}`)
 
 			if (res.status == 200) {
+				//setting data availability according to response from API
+
 				if (res.data.details == 'Data') setDataAvailable('data')
 				else if (res.data.details == 'NoData') setDataAvailable('noData')
 			}
 		} catch (err) {
+			// if there is a error, means there is no records data available
 			console.log(err)
 			setDataAvailable('noData')
 		}
 	}
 
-	const goToRecordItemPage = (favour, data, name, imguri) => {
-		let leftParanthesis = /\(/g
-		let rightParanthesis = /\)/g
-		name = name.replace(leftParanthesis, 'leftParanthesisSign')
-		name = name.replace(rightParanthesis, 'rightParanthesisSign')
-		imguri = imguri.replace(leftParanthesis, 'leftParanthesisSign')
-		imguri = imguri.replace(rightParanthesis, 'rightParanthesisSign')
-
-		router.push({ pathname: '/records/recordItem', params: { favour: favour, data: JSON.stringify(data), name: name, imguri: imguri } })
-	}
-
+	// function to delte record from device and API call to delete data on server
 	const deleteRecord = async data => {
+		// message to tell user to wait
 		setShowMsg('Deleting Record, please wait')
 		try {
+			// getting username from device
 			const username = await secureStore.getItemAsync('username')
-
+			// record tp delete
 			const deleteRecord = {
 				username: username,
 				imgname: data['imageName'],
 				recordname: data['recordName'],
 			}
-
+			// getting album 'nephro_app'
 			const album = await MediaLibrary.getAlbumAsync('nephro_app')
-
+			// getting assets (image) from album
 			const assets = await (await MediaLibrary.getAssetsAsync({ album: album })).assets
 
+			// iterating asset from assets
 			for (let asset of assets) {
+				// if asset uri is same as uri of delete record
 				if (asset.uri == data['imageuri']) {
+					// then remove/delete this image from album
 					await MediaLibrary.removeAssetsFromAlbumAsync(asset, album)
 				}
 			}
 
+			// getting records from device
 			let recordData = await AsyncStorage.getItem('nephro_data')
 
+			// if records are available
 			if (recordData != null) {
+				// variable for storing records except record to delete
 				let newData = []
-
+				// convert records from str to object
 				recordData = JSON.parse(recordData)
-
+				// checking if records length is greater then 0
 				if (recordData.length > 0) {
+					// iterating each record in records
+					// and added record in newData except the record to delete
 					for (let record of recordData) {
 						if (
 							record.username == deleteRecord.username &&
@@ -145,52 +166,64 @@ const Records = () => {
 						) {
 							console.log('found, and deleted')
 						} else {
+							// added record in newData, which does not match delete record
 							newData.push(record)
 						}
 					}
 				}
-
+				// setting new data
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
 			}
-
+			// API call to delete record from server
 			const res = await axios.post(`${url}/deleteDataForUser`, deleteRecord)
 
+			// if response is ok and response has deleted key
 			if (res.status == 200 && res.data['deleted']) {
+				// then telling user the record has been deleted/
 				alert('Record Deleted.')
 			} else {
+				// else telling user error occurred.
 				alert('An error occurred while deleting record.')
 			}
-
+			// removing message from screen
 			setShowMsg('')
 		} catch (err) {
+			// hadnling error and telling user about error.
 			console.log(err)
 			alert('An error occurred while deleting record.')
 			setShowMsg('')
 		}
 
+		// trigger UI change after record delete
 		setReload(!reload)
 	}
 
+	// function to download data (records) from server without images
 	const downloadData = async () => {
+		// telling user to wait downloading data
 		setShowMsg('Downloading Data')
 		try {
+			// getting username from device
 			const username = await secureStore.getItemAsync('username')
-
+			// API call for records data (if there are present is server)
 			const res = await axios.get(`${url}/downloadData/${username}`)
 
-			const newData = []
-			let labelColor = colorScheme == 'dark' ? 'white' : '#242424'
-			const imagesToDownload = []
+			const newData = [] // variable for storing records from server
+			let labelColor = colorScheme == 'dark' ? 'white' : '#242424' // labelColor for graph data from server
+			const imagesToDownload = [] // variable to store image name to donwload
 
+			// if response has data
 			if (res.data) {
+				// iterating each record from data
 				for (let record of res.data) {
-					resultData = [
+					// variable for getting graph data and formating it.
+					let resultData = [
 						{ value: JSON.parse(record.result).normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
 						{ value: JSON.parse(record.result).stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 						{ value: JSON.parse(record.result).cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 						{ value: JSON.parse(record.result).tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
 					]
-
+					// adding record in newData
 					newData.push({
 						recordName: record.recordName,
 						username: record.username,
@@ -198,73 +231,112 @@ const Records = () => {
 						favour: JSON.parse(record.result).favour == 'not Normal' ? 'notnormal' : 'normal',
 						imageName: record.imageName,
 					})
-
+					// image data to download images from server
 					imagesToDownload.push({ imageName: record.imageName, recordName: record.recordName, username: record.username })
 				}
-
+				// setting records in device
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
 
+				// imageToDownload length is greater then 0, then call function to download images
 				if (imagesToDownload.length > 0) downloadImages(imagesToDownload)
-				else setShowMsg('')
+				else setShowMsg('') // else remove message from screen
 			}
 		} catch (err) {
+			// handling error, and tell user the error occurred
 			console.log(err)
 			setShowMsg('')
 			alert('Error occured during downloading')
 		}
 	}
 
+	// function which download image from server and save them in device
 	const downloadImages = async imagesInfo => {
+		// tellinn user, downloading images
 		setShowMsg('Download Images')
 		try {
+			// iterating each imageInfo
 			for (let i = 0; i < imagesInfo.length; i++) {
+				// telling user the downloading image number
 				setShowMsg(`Download Images No: ${i + 1}`)
-
+				// getting image name, username and record name from imageinfo
 				const { imageName, username, recordName } = imagesInfo[i]
-
+				// API call to download the images from server
 				const fileRes = await FileSystem.downloadAsync(
 					`${url}/downloadImage/?username=${username}&imageName=${imageName}&recordName=${recordName}`,
 					FileSystem.documentDirectory + imageName
 				)
-
+				// creating asset from downloaded images
 				const asset = await MediaLibrary.createAssetAsync(fileRes.uri)
-
+				// getting album 'mephro_app'
 				const album = await MediaLibrary.getAlbumAsync('nephro_app')
 
+				// if there is no album
 				if (album == null) {
+					// creating album and added asset
 					await MediaLibrary.createAlbumAsync('nephro_app', asset, true)
 				} else {
+					// else only adding asset in album
 					await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
 				}
 
+				// API call to change image name
+				// changing image name because after creating asset the image name changes
 				await axios.get(
 					`${url}/changeImageName/?username=${username}&recordName=${recordName}&oldImageName=${imageName}&newImageName=${asset.filename}`
 				)
 
+				// getting records from device
 				let recordData = await AsyncStorage.getItem('nephro_data')
 
+				// if records are available
 				if (recordData != null) {
+					// convert record from str to object
 					recordData = JSON.parse(recordData)
-
+					// if records are more then zero
 					if (recordData.length > 0) {
+						// iterating record in records
 						for (const record of recordData) {
+							// if record image name is same as imageName (old image name)
 							if (record.imageName == imageName) {
+								// then change record image name to new image name
 								record.imageName = asset.filename
 							}
 						}
 					}
 
+					// set records after changes.
 					await AsyncStorage.setItem('nephro_data', JSON.stringify(recordData))
 				}
 			}
-
+			// remove message from screen
 			setShowMsg('')
 		} catch (err) {
+			// handling error, and tell user the error occurred
 			console.log(err)
 			setShowMsg('')
 		}
-
+		// trigger UI change after images is downloaded
 		setReload(!reload)
+	}
+
+	// function to go to perticular record item to show detailed view.
+	const goToRecordItemPage = (favour, data, name, imguri) => {
+		//////////////////////////////////
+		// code which covert
+		// '(' to leftParanthesisSign
+		// ')' to rightParanthesisSign
+		// in recordname and imguri
+		// because having '(', ')' in params the expo router does not work
+		let leftParanthesis = /\(/g
+		let rightParanthesis = /\)/g
+		name = name.replace(leftParanthesis, 'leftParanthesisSign')
+		name = name.replace(rightParanthesis, 'rightParanthesisSign')
+		imguri = imguri.replace(leftParanthesis, 'leftParanthesisSign')
+		imguri = imguri.replace(rightParanthesis, 'rightParanthesisSign')
+		///////////////////////////////////////////////////////////
+
+		// go to record Item screen with param data to show detailed view
+		router.push({ pathname: '/records/recordItem', params: { favour: favour, data: JSON.stringify(data), name: name, imguri: imguri } })
 	}
 
 	return (

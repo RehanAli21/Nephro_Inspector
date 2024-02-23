@@ -5,23 +5,30 @@ import ScreenMsg from './component/ScreenMsg'
 import axios from 'axios'
 const { url } = require('../app/config.json')
 
+// to get width and height of device
+// it helps in styling
 const { width, height } = Dimensions.get('window')
 export default function Forget() {
-	const colorScheme = useColorScheme()
+	const colorScheme = useColorScheme() // get system theme mode i.e. dark, light
 
-	const [username, setUsername] = useState('')
-	const [pwd, setPwd] = useState('')
-	const [confirmPwd, setConfirmPwd] = useState('')
-	const [secret, setSecret] = useState('')
+	const [username, setUsername] = useState('') // variable for username
+	const [pwd, setPwd] = useState('') // variable for password
+	const [confirmPwd, setConfirmPwd] = useState('') // variable for confirm password
+	const [secret, setSecret] = useState('') // variable for secret
 
-	const [showMsg, setShowMsg] = useState('')
+	const [showMsg, setShowMsg] = useState('') // variable for Msg on ScreenMsg comp
 
+	// function for changing password based on secret text
 	const changePwd = async () => {
-		console.log(url)
+		// closes keyboard
 		Keyboard.dismiss()
 
+		// checking if,
+		// username and password and confirm password and secret is not empty
 		if (username != '' && pwd != '' && confirmPwd != '' && secret != '') {
+			// checks if, password and confirm password is same
 			if (pwd == confirmPwd) {
+				// data for the user
 				let user = {
 					username: username,
 					password: pwd,
@@ -29,22 +36,30 @@ export default function Forget() {
 				}
 
 				try {
+					// setting msg to tell user to wait
 					setShowMsg('Wait, Changing Password')
+					// api call to change password using secret
 					const res = await axios.post(`${url}/users/changePassword`, user)
 
+					// checks if password is changes
 					if (res.status == 200) {
 						if (res.data.incorrectUsername) {
+							// tells user that username is incorrect
 							alert('Wrong Username.')
 						} else if (res.data.incorrectSecret) {
+							// tells user recover/secret text is wrong
 							alert('Wrong Recover Text.')
 						} else {
+							// tells user that password is changed
 							alert('Password Changed Successfully!!!')
+							// go to login page after 1 sec
 							setTimeout(() => router.replace('/'), 1000)
 						}
 					}
 
 					setShowMsg('')
 				} catch (err) {
+					// on error show different error messages.
 					setShowMsg('')
 					if (err.response.status == 400) {
 						alert(`"${username}", This username Already exists!`)
@@ -53,13 +68,16 @@ export default function Forget() {
 					}
 				}
 			} else {
+				// if password and confirm password is not same
 				alert('Password and Confirm Password is not same!')
 			}
 		} else {
+			// warn user to fill all fields
 			alert('Fill All Fields')
 		}
 	}
 
+	// this varibale helps to change style for confirm password field
 	let confirmPwdBorderColor =
 		confirmPwd != '' && pwd == confirmPwd
 			? { borderColor: 'green', borderBottomWidth: 4 }
@@ -120,6 +138,7 @@ export default function Forget() {
 	)
 }
 
+// general styles
 const styles = StyleSheet.create({
 	container: {
 		alignItems: 'center',
@@ -167,6 +186,7 @@ const styles = StyleSheet.create({
 	},
 })
 
+// specific styles for light mode
 const lightStyle = StyleSheet.create({
 	text: {
 		color: '#242424',
@@ -187,6 +207,7 @@ const lightStyle = StyleSheet.create({
 	},
 })
 
+// specific styles for dark mode
 const darkStyle = StyleSheet.create({
 	text: {
 		color: '#fafafa',
