@@ -170,7 +170,34 @@ async def predictionRoute(username: str, db: db_dependency, image: UploadFile = 
         # handling error
         print(str(e))
         return {"error": "An error occurred while processing the image"}
-    
+
+# route to scan image using AI models without user login or saving
+# (API for quickscan component)
+@app.post('/checkImage/quickScan/', status_code=status.HTTP_201_CREATED)
+async def predictionRoute(username: str, db: db_dependency, image: UploadFile = File(...)):
+    try:
+        # getting results from AI model
+        result = AIFunctions.prediction(image)
+        # importing image in grayscale mode
+        img = Image.open(image.file).convert("L")
+        # getting time
+        time = datetime.now()
+        # setting image name using time value with userame
+        imageName = f"./images/{time.strftime('%H_%M_%S')}_{username}.jpeg" 
+        # saving image in server
+        img.save(imageName)
+        # creating new record with results and image path
+        db_record = models.Record(username='QuickScanUserNotSave', result=json.dumps(result), imageurl=imageName, saved=False)
+        # saving new record on database
+        db.add(db_record)
+        db.commit()
+        # telling user the result
+        return {"message": result, "detail": "Record Created"}
+    except Exception as e:
+        # handling error
+        print(str(e))
+        return {"error": "An error occurred while processing the image"}
+
 # route to save record
 # marking record as save and setting record_name, img_name
 @app.get("/saveImage/", status_code=status.HTTP_200_OK)
