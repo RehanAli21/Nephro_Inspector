@@ -33,6 +33,10 @@ const Layout = () => {
 				name='records/recordItem'
 				options={{ headerShown: false }}
 			/>
+			<Stack.Screen
+				name='quickscan/quickscan'
+				options={{ headerShown: false }}
+			/>
 		</Stack>
 	)
 }

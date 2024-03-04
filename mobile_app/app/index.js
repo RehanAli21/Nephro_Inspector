@@ -109,11 +109,18 @@ export default function Login() {
 					<Text style={[styles.scanText, colorScheme === 'dark' ? darkStyle.text : lightStyle.text]}>LOGIN</Text>
 				</Pressable>
 				{error != '' && <Text style={styles.errText}>{error}</Text>}
-				<Link
-					href={'/Signup'}
-					style={[styles.footerText, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}>
-					<Text>New User?</Text>
-				</Link>
+				<View style={styles.footer}>
+					<Link
+						href={'/Signup'}
+						style={[styles.footerText1, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}>
+						<Text>New User?</Text>
+					</Link>
+					<Link
+						href={'/quickscan/quickscan'}
+						style={[styles.footerText2, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}>
+						<Text>Quick Scan</Text>
+					</Link>
+				</View>
 			</View>
 			{showMsg != '' && <ScreenMsg msg={showMsg} />}
 		</SafeAreaView>
@@ -167,11 +174,26 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: 400,
 	},
-	footerText: {
+	footer: {
+		display: 'flex',
+		flexDirection: 'row',
+		justifyContent: 'space-evenly',
 		position: 'absolute',
 		bottom: 0,
 		paddingBottom: 5,
 		borderBottomWidth: 2,
+	},
+	footerText1: {
+		borderRightWidth: 5,
+		borderColor: '#fafafa',
+		paddingEnd: 20,
+		fontSize: width * 0.04,
+	},
+	footerText2: {
+		borderLeftWidth: 5,
+		borderColor: '#fafafa',
+		paddingStart: 20,
+		fontSize: width * 0.04,
 	},
 	errText: {
 		color: 'rgb(255, 50, 50)',
