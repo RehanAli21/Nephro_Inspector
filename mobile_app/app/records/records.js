@@ -11,6 +11,7 @@ import {
 	ScrollView,
 	ActivityIndicator,
 	Platform,
+	TextInput,
 } from 'react-native'
 import { AntDesign, FontAwesome5 } from '@expo/vector-icons'
 import { Link, router } from 'expo-router'
@@ -33,6 +34,7 @@ const Records = () => {
 	const [dataAvailable, setDataAvailable] = useState('') // variable to tell if data is available on the server
 	const [showMsg, setShowMsg] = useState('') // to show message on ScreenMsg component
 	const [reload, setReload] = useState(true) // variable to trigger UI changes
+	const [query, setQuery] = useState('')
 
 	// getting data from device on compo start and UI change trigger
 	useEffect(() => {
@@ -58,12 +60,14 @@ const Records = () => {
 					// iterating each record in records
 					for (const record of recordData) {
 						// added record in compData in specific format
-						compData.push({
-							recordName: record.recordName,
-							imageName: record.imageName,
-							data: record.result,
-							favour: record.favour,
-						})
+						if (record.username == username) {
+							compData.push({
+								recordName: record.recordName,
+								imageName: record.imageName,
+								data: record.result,
+								favour: record.favour,
+							})
+						}
 					}
 					// getting 'nephro_app' album
 					const album = await MediaLibrary.getAlbumAsync('nephro_app')
@@ -83,7 +87,7 @@ const Records = () => {
 					// setting data which shows records
 					setData(compData)
 					// setting data availability to present
-					setDataAvailable('present')
+					setDataAvailable(compData.length > 0 ? 'present' : 'noData')
 				} else {
 					// records length is not greater then 0, then check from server
 					checkDataFromAPI()
@@ -91,6 +95,70 @@ const Records = () => {
 			} else {
 				// records is not present, then check from server
 				checkDataFromAPI()
+			}
+		} catch (err) {
+			// if there is a error, means there is no records data available
+			console.log(err)
+			setDataAvailable('noData')
+		}
+	}
+
+	useEffect(() => {
+		recordDataQuery()
+	}, [query])
+
+	const recordDataQuery = async () => {
+		if (query == '') {
+			getDeviceData()
+			return
+		}
+
+		console.log('getting data using query')
+		try {
+			// getting username from device
+			username = await secureStore.getItemAsync('username')
+			// getting records data from device
+			let recordData = await AsyncStorage.getItem('nephro_data')
+			// await AsyncStorage.removeItem('nephro_data')
+			// if records are availabel
+			if (recordData != null) {
+				let compData = [] // to store records data after modification
+				// convert records data from str to object
+				recordData = JSON.parse(recordData)
+				// checking if records length is greater then 0
+				if (recordData.length > 0) {
+					// iterating each record in records
+					for (const record of recordData) {
+						// added record in compData in specific format
+						if (record.username == username && record.recordName.includes(query)) {
+							compData.push({
+								recordName: record.recordName,
+								imageName: record.imageName,
+								data: record.result,
+								favour: record.favour,
+							})
+						}
+					}
+					// getting 'nephro_app' album
+					const album = await MediaLibrary.getAlbumAsync('nephro_app')
+					// getting assets (images) from album
+					const assets = await MediaLibrary.getAssetsAsync({ album: album })
+					// iteraring asset in assets
+					for (let asset of assets.assets) {
+						// iterating each comp (data) from compData
+						for (let comp of compData) {
+							// if current asset name is same as any comp image name
+							if (asset.filename == comp.imageName) {
+								// then add image uri in comp
+								comp['imageuri'] = asset.uri
+							}
+						}
+					}
+					// setting data which shows records
+					setData(compData)
+					// setting data availability to present
+					setDataAvailable(compData.length > 0 ? 'present' : 'NotFound')
+				}
 			}
 		} catch (err) {
 			// if there is a error, means there is no records data available
@@ -353,6 +421,15 @@ const Records = () => {
 						/>
 					</Pressable>
 				</Link>
+				<TextInput
+					onChangeText={text => setQuery(text)}
+					autoCapitalize='none'
+					autoComplete='off'
+					autoCorrect={false}
+					placeholder='Search'
+					placeholderTextColor={colorScheme == 'dark' ? '#fafafa' : '#242424'}
+					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
+				/>
 			</View>
 			<Text style={[styles.h1, colorScheme == 'dark' ? darkStyle.h1 : lightStyle.h1]}>Records</Text>
 			{dataAvailable == 'present' || dataAvailable == '' ? (
@@ -421,6 +498,12 @@ const Records = () => {
 						You have no Data to Show
 					</Text>
 				</View>
+			) : dataAvailable == 'NotFound' ? (
+				<View>
+					<Text style={[{ marginTop: height * 0.2 }, styles.dataText, colorScheme == 'dark' ? darkStyle.h1 : lightStyle.h1]}>
+						Search not matched
+					</Text>
+				</View>
 			) : null}
 			{showMsg != '' ? <ScreenMsg msg={showMsg} /> : null}
 		</SafeAreaView>
@@ -437,10 +520,21 @@ const styles = StyleSheet.create({
 	nav: {
 		marginTop: height * 0.065,
 		width: '100%',
-		justifyContent: 'center',
-		paddingStart: 15,
+		paddingStart: 25,
 		paddingBottom: 15,
 		borderBottomWidth: 2,
+		display: 'flex',
+		flexDirection: 'row',
+	},
+	input: {
+		borderWidth: 1,
+		padding: 5,
+		paddingHorizontal: 15,
+		marginHorizontal: 15,
+		borderRadius: 5,
+		fontSize: 18,
+		width: width * 0.6,
+		marginStart: width * 0.2,
 	},
 	h1: {
 		fontSize: 28,
@@ -526,6 +620,10 @@ const darkStyle = StyleSheet.create({
 	h1: {
 		color: '#fafafa',
 	},
+	input: {
+		color: '#fafafa',
+		borderColor: '#fafafa',
+	},
 })
 
 const lightStyle = StyleSheet.create({
@@ -537,6 +635,10 @@ const lightStyle = StyleSheet.create({
 	},
 	h1: {
 		color: '#242424',
+	},
+	input: {
+		color: '#242424',
+		borderColor: '#242424',
 	},
 })
 

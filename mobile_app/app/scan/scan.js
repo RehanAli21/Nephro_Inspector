@@ -235,6 +235,8 @@ export default function Page() {
 			// getting records saved on the device
 			const recordData = await AsyncStorage.getItem('nephro_data')
 
+			console.log(recordData)
+
 			// if records are present
 			if (recordData !== null) {
 				// then add record in that data
