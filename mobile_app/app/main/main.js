@@ -8,6 +8,8 @@ const brecordicon = require('../../assets/icons/brecordicon.png')
 const wsignout = require('../../assets/icons/whiteSignout.png')
 const bsignout = require('../../assets/icons/blackSignout.png')
 import * as secureStore from 'expo-secure-store'
+import * as MediaLibrary from 'expo-media-library'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // to get width and height of device
 // it helps in styling
@@ -61,9 +63,17 @@ export default function Main() {
 		// enabling go to back functinality
 		setGoBack(true)
 
-		// deleting login data information
-		await secureStore.deleteItemAsync('loggedIn')
-		await secureStore.deleteItemAsync('username')
+		try {
+			// deleting login data information
+			await secureStore.deleteItemAsync('loggedIn')
+			await secureStore.deleteItemAsync('username')
+			await AsyncStorage.removeItem('nephro_data')
+			const album = await MediaLibrary.getAlbumAsync('nephro_app')
+
+			await MediaLibrary.deleteAlbumsAsync(album, true)
+		} catch (err) {
+			console.log(err)
+		}
 
 		// going to login screen
 		router.replace('/')

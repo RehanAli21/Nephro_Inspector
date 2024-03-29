@@ -181,7 +181,6 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		bottom: 0,
 		paddingBottom: 5,
-		borderBottomWidth: 2,
 	},
 	footerText1: {
 		borderRightWidth: 5,
