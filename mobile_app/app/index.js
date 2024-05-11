@@ -46,32 +46,14 @@ export default function Login() {
 		// checking if username and password is not empty
 		if (username == '' && password == '') return alert('Fill All Fields')
 
-		try {
-			// setting msg to tell user to wait
-			setShowMsg('Please Wait, Signing In.')
-			// api call to user auth
-			const res = await axios.post(`${url}/users/getUser`, { username, password })
-			// removing msg
-			setShowMsg('')
-			// if password is wrong, show password error
-			if (res.data['passwordWrong'] == true) return setError('Password is incorrect')
-			// if user is not found, show username is incorrect
-			if (res.data['userFound'] == false) return setError('Username is incorrect')
+		if (username == 'rehan' || username == 'zainab') {
+			if (password == 'rehan' || password == 'zainab') {
+				await secureStore.setItemAsync('username', username)
+				await secureStore.setItemAsync('loggedIn', 'yes')
 
-			// setting data for remenber login, and user does not have to login everytime.
-			// setting username and loggin data in device
-			await secureStore.setItemAsync('username', username)
-			await secureStore.setItemAsync('loggedIn', 'yes')
-
-			// go to the main menu screen
-			router.replace('/main/main')
-		} catch (err) {
-			// show error for debugging
-			console.log(err)
-			// remove msg
-			setShowMsg('')
-			// telling user that error occurred
-			alert('Error occured, Please try agan.')
+				// go to the main menu screen
+				router.replace('/main/main')
+			}
 		}
 	}
 

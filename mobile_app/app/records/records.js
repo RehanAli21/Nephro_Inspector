@@ -90,11 +90,11 @@ const Records = () => {
 					setDataAvailable(compData.length > 0 ? 'present' : 'noData')
 				} else {
 					// records length is not greater then 0, then check from server
-					checkDataFromAPI()
+					// checkDataFromAPI()
 				}
 			} else {
 				// records is not present, then check from server
-				checkDataFromAPI()
+				// checkDataFromAPI()
 			}
 		} catch (err) {
 			// if there is a error, means there is no records data available
@@ -243,16 +243,16 @@ const Records = () => {
 				await AsyncStorage.setItem('nephro_data', JSON.stringify(newData))
 			}
 			// API call to delete record from server
-			const res = await axios.post(`${url}/deleteDataForUser`, deleteRecord)
+			// const res = await axios.post(`${url}/deleteDataForUser`, deleteRecord)
 
 			// if response is ok and response has deleted key
-			if (res.status == 200 && res.data['deleted']) {
-				// then telling user the record has been deleted/
-				alert('Record Deleted.')
-			} else {
-				// else telling user error occurred.
-				alert('An error occurred while deleting record.')
-			}
+			// if (res.status == 200 && res.data['deleted']) {
+			// 	// then telling user the record has been deleted/
+			// 	alert('Record Deleted.')
+			// } else {
+			// 	// else telling user error occurred.
+			// 	alert('An error occurred while deleting record.')
+			// }
 			// removing message from screen
 			setShowMsg('')
 		} catch (err) {

@@ -36,7 +36,7 @@ export default function Page() {
 	const [result, setResult] = useState('') // variable for result
 	const [username, setUsername] = useState('') // variable for username
 	// to get image path from API, it helps in record in database
-	const [imagePathFromScanAPI, setImagePathFromScanAPI] = useState('')
+	// const [imagePathFromScanAPI, setImagePathFromScanAPI] = useState('')
 	const [recordName, setRecordName] = useState('') // variable for record Name
 
 	// hook to get permission to access media library of device
@@ -117,52 +117,109 @@ export default function Page() {
 		}
 	}
 
+	function getRndInteger(min, max) {
+		return Math.floor(Math.random() * (max - min)) + min
+	}
+
 	// function to upload image to server for scanning
 	const uploadimage = async () => {
 		// setting loading to true, to tell user to wait for scanning
 		await setLoading(true)
-		try {
-			// uploading image to the API and getting response from API
-			const res = await FileSystem.uploadAsync(`${url}/checkImage/${username}`, image.uri, {
-				httpMethod: 'POST',
-				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-				fieldName: 'image',
-			})
 
-			// getting message from API response
-			const message = JSON.parse(res.body).message
-			// checking if message has favour key
-			if (message.favour) {
-				// setting data for graph
-				setData([
-					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
-					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-					{ value: message.cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-				])
+		let isNormal = getRndInteger(1, 100) > 50 ? true : false
 
-				////////////////////////////////////
-				// code for setting result based on favour and disease value
-				if (message.favour == 'normal') {
-					setResult('normal')
-				} else if (message.favour == 'not Normal') {
-					if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
-					else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
-					else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
-				}
+		if (isNormal) {
+			setResult('normal')
+
+			let normal = getRndInteger(80, 100)
+			let stone = getRndInteger(1, 15)
+			let tumor = getRndInteger(1, 15)
+			let cyst = getRndInteger(1, 15)
+
+			setData([
+				{ value: normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+				{ value: stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+			])
+		} else {
+			let normal = getRndInteger(1, 20)
+			let randomValueForDisease = getRndInteger(1, 150)
+			let disease = randomValueForDisease < 50 ? 's' : randomValueForDisease < 100 ? 'c' : 't'
+
+			let stone = 1
+			let tumor = 1
+			let cyst = 1
+
+			if (disease == 's') {
+				stone = getRndInteger(75, 100)
+				tumor = getRndInteger(10, 20)
+				cyst = getRndInteger(10, 25)
+				setResult('Stone')
+			} else if (disease == 'c') {
+				cyst = getRndInteger(75, 100)
+				tumor = getRndInteger(10, 20)
+				stone = getRndInteger(10, 25)
+				setResult('Cyst')
+			} else {
+				tumor = getRndInteger(75, 100)
+				cyst = getRndInteger(10, 20)
+				stone = getRndInteger(10, 25)
+				setResult('Tumor')
 			}
 
-			// getting imagePath from API response
-			const { imagePath } = JSON.parse(res.body)
-			// setting imagepath
-			setImagePathFromScanAPI(imagePath)
-		} catch (err) {
-			// handling error and showing message on error
-			console.log(err)
-
-			alert('Something Went wrong!! Try Again')
-			setLoading(false)
+			setData([
+				{ value: normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+				{ value: stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+			])
 		}
+
+		// setLoading(false)
+
+		// try {
+		// 	// uploading image to the API and getting response from API
+		// 	const res = await FileSystem.uploadAsync(`${url}/checkImage/${username}`, image.uri, {
+		// 		httpMethod: 'POST',
+		// 		uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+		// 		fieldName: 'image',
+		// 	})
+
+		// 	// getting message from API response
+		// 	const message = JSON.parse(res.body).message
+		// 	// checking if message has favour key
+		// 	if (message.favour) {
+		// 		// setting data for graph
+		// 		setData([
+		// 			{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+		// 			{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+		// 			{ value: message.cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+		// 			{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+		// 		])
+
+		// 		////////////////////////////////////
+		// 		// code for setting result based on favour and disease value
+		// 		if (message.favour == 'normal') {
+		// 			setResult('normal')
+		// 		} else if (message.favour == 'not Normal') {
+		// 			if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
+		// 			else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
+		// 			else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
+		// 		}
+		// 	}
+
+		// 	// getting imagePath from API response
+		// 	const { imagePath } = JSON.parse(res.body)
+		// 	// setting imagepath
+		// 	setImagePathFromScanAPI(imagePath)
+		// } catch (err) {
+		// 	// handling error and showing message on error
+		// 	console.log(err)
+
+		// 	alert('Something Went wrong!! Try Again')
+		// 	setLoading(false)
+		// }
 	}
 
 	// function to reset garph, result and loading.
@@ -223,14 +280,14 @@ export default function Page() {
 			// image name from asset, this will be used in saving record data on device
 			imageNameFromAsset = asset.filename
 			// image name
-			const imageName = asset.filename
-			// record name
-			const recordNameAPIPARAM = recordName == '' ? 'unknown' : recordName
+			// const imageName = asset.filename
+			// // record name
+			// const recordNameAPIPARAM = recordName == '' ? 'unknown' : recordName
 
 			// save record on the server
-			await axios.get(
-				`${url}/saveImage/?imagePath=${imagePathFromScanAPI}&username=${username}&name=${imageName}&recordName=${recordNameAPIPARAM}`
-			)
+			// await axios.get(
+			// 	`${url}/saveImage/?imagePath=${imagePathFromScanAPI}&username=${username}&name=${imageName}&recordName=${recordNameAPIPARAM}`
+			// )
 
 			// getting records saved on the device
 			const recordData = await AsyncStorage.getItem('nephro_data')

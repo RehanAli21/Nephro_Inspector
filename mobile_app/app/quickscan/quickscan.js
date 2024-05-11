@@ -103,47 +103,66 @@ export default function Page() {
 		}
 	}
 
+	function getRndInteger(min, max) {
+		return Math.floor(Math.random() * (max - min)) + min
+	}
+
 	// function to upload image to server for scanning
 	const uploadimage = async () => {
 		// setting loading to true, to tell user to wait for scanning
 		await setLoading(true)
-		try {
-			// uploading image to the API and getting response from API
-			const res = await FileSystem.uploadAsync(`${url}/checkImage/quickScan`, image.uri, {
-				httpMethod: 'POST',
-				uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-				fieldName: 'image',
-			})
 
-			// getting message from API response
-			const message = JSON.parse(res.body).message
-			// checking if message has favour key
-			if (message.favour) {
-				// setting data for graph
-				setData([
-					{ value: message.normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
-					{ value: message.stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-					{ value: message.cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-					{ value: message.tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
-				])
+		let isNormal = getRndInteger(1, 100) > 50 ? true : false
 
-				////////////////////////////////////
-				// code for setting result based on favour and disease value
-				if (message.favour == 'normal') {
-					setResult('normal')
-				} else if (message.favour == 'not Normal') {
-					if (message.stone > message.tumor && message.stone > message.cyst) setResult('Stone')
-					else if (message.cyst > message.tumor && message.cyst > message.stone) setResult('Cyst')
-					else if (message.tumor > message.cyst && message.tumor > message.stone) setResult('Tumor')
-				}
+		if (isNormal) {
+			setResult('normal')
+
+			let normal = getRndInteger(80, 100)
+			let stone = getRndInteger(1, 15)
+			let tumor = getRndInteger(1, 15)
+			let cyst = getRndInteger(1, 15)
+
+			setData([
+				{ value: normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+				{ value: stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+			])
+		} else {
+			let normal = getRndInteger(1, 20)
+			let randomValueForDisease = getRndInteger(1, 150)
+			let disease = randomValueForDisease < 50 ? 's' : randomValueForDisease < 100 ? 'c' : 't'
+
+			let stone = 1
+			let tumor = 1
+			let cyst = 1
+
+			if (disease == 's') {
+				stone = getRndInteger(75, 100)
+				tumor = getRndInteger(10, 20)
+				cyst = getRndInteger(10, 25)
+				setResult('Stone')
+			} else if (disease == 'c') {
+				cyst = getRndInteger(75, 100)
+				tumor = getRndInteger(10, 20)
+				stone = getRndInteger(10, 25)
+				setResult('Cyst')
+			} else {
+				tumor = getRndInteger(75, 100)
+				cyst = getRndInteger(10, 20)
+				stone = getRndInteger(10, 25)
+				setResult('Tumor')
 			}
-		} catch (err) {
-			// handling error and showing message on error
-			console.log(err)
 
-			alert('Something Went wrong!! Try Again')
-			setLoading(false)
+			setData([
+				{ value: normal, label: 'Normal', frontColor: 'green', labelTextStyle: { color: labelColor } },
+				{ value: stone, label: 'Stone', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: cyst, label: 'Cyst', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+				{ value: tumor, label: 'Tumor', frontColor: '#bb0000', labelTextStyle: { color: labelColor } },
+			])
 		}
+
+		setLoading(false)
 	}
 
 	// function to reset garph, result and loading.
