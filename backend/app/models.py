@@ -22,4 +22,5 @@ class Record(Base):
     imageurl = Column(String(150), nullable=False, unique=True)
     result = Column(String(100)) # this is for saving results
     saved = Column(Boolean) # this is for checking wheather this is available for user or not
+    date = Column(String(25))
 

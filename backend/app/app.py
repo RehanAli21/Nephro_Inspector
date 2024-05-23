@@ -159,8 +159,13 @@ async def predictionRoute(username: str, db: db_dependency, image: UploadFile = 
         imageName = f"./images/{time.strftime('%H_%M_%S')}_{username}.jpeg" 
         # saving image in server
         img.save(imageName)
+        # to get date and time
+        now = datetime.now()
+        formatted_date = now.strftime('%d/%m/%Y, %I:%M:%S %p')
+        # Replace AM/PM with lowercase am/pm
+        formatted_date = formatted_date.replace('AM', 'am').replace('PM', 'pm').lstrip('0')
         # creating new record with results and image path
-        db_record = models.Record(username=username, result=json.dumps(result), imageurl=imageName, saved=False)
+        db_record = models.Record(username=username, result=json.dumps(result), imageurl=imageName, saved=False, date=formatted_date)
         # saving new record on database
         db.add(db_record)
         db.commit()
@@ -287,6 +292,7 @@ def downloadData(username: str, db: db_dependency):
                 "username": username,
 			    "result": record.result,
 			    "imageName": record.imgname,
+                "date": record.date
             })
         # sending records to the user
         return newData
