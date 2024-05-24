@@ -10,6 +10,7 @@ import * as MediaLibrary from 'expo-media-library'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Link } from 'expo-router'
 import axios from 'axios'
+import moment from 'moment'
 const { url } = require('../config.json')
 const bCameraIcon = require('../../assets/icons/bcameraicon.png')
 const bImageIcon = require('../../assets/icons/bimageicon.png')
@@ -269,6 +270,9 @@ export default function Page() {
 		console.log('image name: ', imageNameFromAsset)
 		// record Name
 		let rName = recordName == '' ? 'unknown' : recordName
+		//date of record
+		let dateFormat = 'DD/MM/YYYY, h:mm:ss a'
+		let date = moment().format(dateFormat)
 		// new record data to save
 		// record has record name, username, results, favour and image name
 		const d = {
@@ -277,6 +281,7 @@ export default function Page() {
 			result: data,
 			favour: result == 'normal' ? 'normal' : 'notnormal',
 			imageName: imageNameFromAsset,
+			date: date,
 		}
 
 		// if records is null (means there is not records)

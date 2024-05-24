@@ -17,11 +17,13 @@ import { AntDesign, FontAwesome5 } from '@expo/vector-icons'
 import { Link, router } from 'expo-router'
 import { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Picker } from '@react-native-picker/picker'
 import * as secureStore from 'expo-secure-store'
 import * as MediaLibrary from 'expo-media-library'
 import * as FileSystem from 'expo-file-system'
 import ScreenMsg from '../component/ScreenMsg'
 import axios from 'axios'
+import moment from 'moment'
 const { url } = require('../config.json')
 
 // to get width and height of device
@@ -34,7 +36,9 @@ const Records = () => {
 	const [dataAvailable, setDataAvailable] = useState('') // variable to tell if data is available on the server
 	const [showMsg, setShowMsg] = useState('') // to show message on ScreenMsg component
 	const [reload, setReload] = useState(true) // variable to trigger UI changes
-	const [query, setQuery] = useState('')
+	const [query, setQuery] = useState('') // variable to store search query
+	const [sort, setSort] = useState('n') // variable to store sorting option
+	const [recordSort, setRecordSort] = useState(true)
 
 	// getting data from device on compo start and UI change trigger
 	useEffect(() => {
@@ -66,6 +70,7 @@ const Records = () => {
 								imageName: record.imageName,
 								data: record.result,
 								favour: record.favour,
+								date: record.date,
 							})
 						}
 					}
@@ -84,8 +89,11 @@ const Records = () => {
 							}
 						}
 					}
-					// setting data which shows records
-					setData(compData)
+
+					// setting data which shows records after sorting (inside function)
+					sortRecords(compData)
+
+					// setData(compData)
 					// setting data availability to present
 					setDataAvailable(compData.length > 0 ? 'present' : 'noData')
 				} else {
@@ -165,6 +173,50 @@ const Records = () => {
 			console.log(err)
 			setDataAvailable('noData')
 		}
+	}
+
+	useEffect(() => {
+		sortRecords(data)
+		setRecordSort(!recordSort)
+	}, [sort])
+
+	const sortRecords = data => {
+		let newData = data
+		if (sort == 'n') {
+			let len = newData.length
+			for (let i = 0; i < len; i++) {
+				for (let j = 0; j < len; j++) {
+					let format = 'DD/MM/YYYY, h:mm:ss a'
+
+					let a = moment(newData[i].date, format)
+					let b = moment(newData[j].date, format)
+
+					if (a.isAfter(b)) {
+						let temp = newData[j]
+						newData[j] = newData[i]
+						newData[i] = temp
+					}
+				}
+			}
+		} else if (sort == 'o') {
+			let len = newData.length
+			for (let i = 0; i < len; i++) {
+				for (let j = 0; j < len; j++) {
+					let format = 'DD/MM/YYYY, h:mm:ss a'
+
+					let a = moment(newData[i].date, format)
+					let b = moment(newData[j].date, format)
+
+					if (a.isBefore(b)) {
+						let temp = newData[j]
+						newData[j] = newData[i]
+						newData[i] = temp
+					}
+				}
+			}
+		}
+
+		setData(newData)
 	}
 
 	// function to check if records data are available for download
@@ -298,6 +350,7 @@ const Records = () => {
 						result: resultData,
 						favour: JSON.parse(record.result).favour == 'not Normal' ? 'notnormal' : 'normal',
 						imageName: record.imageName,
+						date: record.date,
 					})
 					// image data to download images from server
 					imagesToDownload.push({ imageName: record.imageName, recordName: record.recordName, username: record.username })
@@ -431,7 +484,23 @@ const Records = () => {
 					style={[styles.input, colorScheme === 'dark' ? darkStyle.input : lightStyle.input]}
 				/>
 			</View>
-			<Text style={[styles.h1, colorScheme == 'dark' ? darkStyle.h1 : lightStyle.h1]}>Records</Text>
+
+			<View style={[styles.recordsHeader, colorScheme == 'dark' ? darkStyle.recordsHeader : lightStyle.recordsHeader]}>
+				<Text style={[styles.h1, colorScheme == 'dark' ? darkStyle.h1 : lightStyle.h1]}>Records</Text>
+				<Picker
+					style={[styles.picker, colorScheme == 'dark' ? darkStyle.picker : lightStyle.picker]}
+					selectedValue={sort}
+					onValueChange={(itemValue, itemIndex) => setSort(itemValue)}>
+					<Picker.Item
+						label='Sort: Newest'
+						value='n'
+					/>
+					<Picker.Item
+						label='Sort: Oldest'
+						value='o'
+					/>
+				</Picker>
+			</View>
 			{dataAvailable == 'present' || dataAvailable == '' ? (
 				data.length > 0 ? (
 					<ScrollView style={styles.cardContainer}>
@@ -506,6 +575,7 @@ const Records = () => {
 				</View>
 			) : null}
 			{showMsg != '' ? <ScreenMsg msg={showMsg} /> : null}
+			<Text style={{ display: 'none' }}>{recordSort ? 'change' : 'no chnage'}</Text>
 		</SafeAreaView>
 	)
 }
@@ -536,11 +606,20 @@ const styles = StyleSheet.create({
 		width: width * 0.6,
 		marginStart: width * 0.2,
 	},
+	recordsHeader: {
+		width: width * 0.9,
+		display: 'flex',
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
 	h1: {
+		width: width * 0.5,
 		fontSize: 28,
 		fontWeight: '500',
-		width: width * 0.8,
-		margin: 10,
+	},
+	picker: {
+		width: width * 0.45,
+		marginTop: 5,
 	},
 	cardContainer: {
 		marginTop: 20,
@@ -623,6 +702,9 @@ const darkStyle = StyleSheet.create({
 	input: {
 		color: '#fafafa',
 		borderColor: '#fafafa',
+	},
+	picker: {
+		color: '#fafafa',
 	},
 })
 
