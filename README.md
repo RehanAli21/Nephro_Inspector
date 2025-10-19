@@ -20,8 +20,9 @@ Follow the steps below.
 -   Step-6: Install xampp or any other application to run MysQL database on machine.
 -   Step-7: config/modify the URL_DATABASE variable inside database.py file to make it run with you databases.
 -   Step-8: becuase this application is running locally so to connect mobile_app to backend, the ip address in "url" which is found in "mobile_app/app/config.json" have to change to match machine ip addess (Note: can get ipv4 address in windows using "ipconfig" command in teminal)
--   Step-9: To run backend, open project directory in terminal write command "backendscript" (in windows).
--   Step-10: To run mobile_app, open project directory in terminal write command "mobilescript" (in windows).
+-   Step-9: Create images folder inside backend folder.
+-   Step-10: To run backend, open project directory in terminal write command "backendscript" (in windows).
+-   Step-11: To run mobile_app, open project directory in terminal write command "mobilescript" (in windows).
 
 <br><br>
 
